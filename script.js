@@ -1,13 +1,32 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    // --- THEME TOGGLE --- //
+    const themeToggle = document.getElementById('theme-toggle');
+    themeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark');
+        // Toggle icon text optionally
+        if (document.body.classList.contains('dark')) {
+            themeToggle.textContent = '☀️';
+        } else {
+            themeToggle.textContent = '🌙';
+        }
+    });
+
+    // Setup initial icon
+    if (document.body.classList.contains('dark')) {
+        themeToggle.textContent = '☀️';
+    } else {
+        themeToggle.textContent = '🌙';
+    }
+
     // --- DYNAMIC DATA --- //
     const personaNeeds = ['Clarity', 'Visibility', 'Ownership', 'Timely updates'];
     
     const snapshotData = [
-        { label: 'Tech comfort', score: 8, color: 'var(--accent-teal)' },
-        { label: 'Patience for follow-ups', score: 2, color: 'var(--accent-red)' },
-        { label: 'Need for transparency', score: 10, color: 'var(--accent-teal)' },
-        { label: 'Tolerance for ambiguity', score: 3, color: 'var(--accent-amber)' }
+        { label: 'Tech comfort', score: 8, color: 'var(--chart-1)' },
+        { label: 'Patience for follow-ups', score: 2, color: 'var(--destructive)' },
+        { label: 'Need for transparency', score: 10, color: 'var(--primary)' },
+        { label: 'Tolerance for ambiguity', score: 3, color: 'var(--chart-4)' }
     ];
 
     const painPoints = [
@@ -58,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const painHTML = painPoints.map((p, index) => `
         <div class="dynamic-card scroll-anim" data-anim="fade-up" style="transition-delay: ${index * 100}ms;">
             <h4 style="font-size: 1.2rem; margin-bottom: 0.5rem;">${p.icon} ${p.title}</h4>
-            <p style="color: var(--text-muted);">${p.desc}</p>
+            <p style="color: var(--muted-foreground);">${p.desc}</p>
         </div>
     `).join('');
     document.getElementById('pain-points-grid').innerHTML = painHTML;
@@ -66,8 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Render Journey
     const journeyHTML = journeyData.map((j, index) => `
         <div class="journey-step scroll-anim" data-anim="slide-left" style="transition-delay: ${index * 150}ms;">
-            <div class="step-num">STEP ${j.step}</div>
-            <h4 style="color: var(--accent-amber); font-size: 1.2rem;">${j.title}</h4>
+            <div class="step-num font-mono">STEP ${j.step}</div>
+            <h4 style="color: var(--primary); font-size: 1.2rem;">${j.title}</h4>
             <p>${j.desc}</p>
         </div>
     `).join('');
@@ -78,8 +97,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="success-item scroll-anim" data-anim="scale-in" style="transition-delay: ${index * 100}ms;">
             <div class="icon">${s.icon}</div>
             <div>
-                <h4 style="color: var(--accent-teal);">${s.q}</h4>
-                <p style="color: var(--text-muted);">➔ ${s.a}</p>
+                <h4 style="color: var(--chart-1);">${s.q}</h4>
+                <p style="color: var(--muted-foreground);">➔ ${s.a}</p>
             </div>
         </div>
     `).join('');
@@ -117,5 +136,5 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollObserver.observe(el);
     });
 
-    console.log("Dynamic content rendered and advanced scroll animations initialized.");
+    console.log("Dynamic content rendered, theme toggle initialized, and advanced scroll animations active.");
 });

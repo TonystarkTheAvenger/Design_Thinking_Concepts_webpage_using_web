@@ -4,9 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fixing the Fixes — UX Case Study</title>
+    <!-- Importing fonts required by the new theme -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="dark">
+    <div class="theme-toggle-wrapper">
+        <button id="theme-toggle" title="Toggle Light/Dark Theme">🌓</button>
+    </div>
+
     <header class="hero">
         <div class="container scroll-anim" data-anim="fade-up">
             <h1 class="gradient-text">Fixing the Fixes</h1>
@@ -18,11 +26,11 @@
 
     <main class="container">
         
-        <!-- NEW ORDER 1: Problem Statement -->
+        <!-- Problem Statement -->
         <section id="problem-statement" class="scroll-anim" data-anim="scale-in">
             <h2 class="section-title"><span>01</span> The Core Problem</h2>
             
-            <div class="glass-card root-cause-card">
+            <div class="theme-card root-cause-card">
                 <h3>The Root of the Problem</h3>
                 <p>The visible complaint is usually: <em>“my maintenance issue is taking too long.”</em></p>
                 <div class="chain-reaction">
@@ -38,34 +46,34 @@
                 </div>
             </div>
 
-            <div class="statement-card glass-card scroll-anim mt-4" data-anim="slide-left" style="transition-delay: 200ms;">
+            <div class="statement-card theme-card scroll-anim mt-4" data-anim="slide-left" style="transition-delay: 200ms;">
                 <h3 class="gradient-text">Primary Problem Statement</h3>
                 <p class="statement-text">Apartment residents struggle to get maintenance issues resolved efficiently because complaints are reported through fragmented communication channels, making it difficult to track requests, identify responsibility, and receive timely updates.</p>
                 
                 <div class="grid-3 mt-4">
-                    <div class="dynamic-card border-teal">
-                        <h4 class="accent-teal">USER</h4>
+                    <div class="dynamic-card border-1">
+                        <h4 class="accent-1">USER</h4>
                         <p>Apartment residents</p>
                     </div>
-                    <div class="dynamic-card border-amber">
-                        <h4 class="accent-amber">NEED</h4>
+                    <div class="dynamic-card border-2">
+                        <h4 class="accent-2">NEED</h4>
                         <p>A clear, reliable way to report, track, and understand issue progress.</p>
                     </div>
-                    <div class="dynamic-card border-purple">
-                        <h4 class="accent-purple">BECAUSE</h4>
+                    <div class="dynamic-card border-3">
+                        <h4 class="accent-3">BECAUSE</h4>
                         <p>Current communication lacks visible ownership, priority, and status.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- NEW ORDER 2: Persona -->
+        <!-- Persona -->
         <section id="persona">
             <h2 class="section-title scroll-anim" data-anim="fade-up"><span>02</span> Primary Persona</h2>
-            <div class="persona-card glass-card scroll-anim" data-anim="slide-right">
+            <div class="persona-card theme-card scroll-anim" data-anim="slide-right">
                 <div class="persona-header">
                     <h3>Aarav Mehta</h3>
-                    <p>32 &middot; Software Engineer &middot; Apartment Resident</p>
+                    <p class="font-mono">32 &middot; Software Engineer &middot; Apartment Resident</p>
                 </div>
                 <blockquote class="persona-quote">
                     “I don't mind reporting the problem. I hate having to chase someone to find out what happened to it.”
@@ -84,7 +92,7 @@
                 </div>
             </div>
 
-            <div class="snapshot-container glass-card mt-4 scroll-anim" data-anim="fade-up">
+            <div class="snapshot-container theme-card mt-4 scroll-anim" data-anim="fade-up">
                 <h3 class="mb-2">Persona Snapshot</h3>
                 <!-- Progress bars are empty initially; filled via JS on scroll -->
                 <div id="progress-container"></div>
@@ -111,7 +119,7 @@
         <section id="validation" class="scroll-anim" data-anim="scale-in">
             <h2 class="section-title"><span>05</span> Validation &amp; Success Metrics</h2>
             
-            <div class="glass-card">
+            <div class="theme-card">
                 <h3>What does success look like?</h3>
                 <p class="mb-2">A better process should easily answer five simple questions:</p>
                 <div id="success-metrics" class="grid-2">
@@ -125,21 +133,21 @@
     <!-- Footer for Design Thinking Concepts -->
     <footer class="dt-footer">
         <div class="container scroll-anim" data-anim="fade-up">
-            <h3>Design Thinking Concepts Applied</h3>
+            <h3 class="font-serif">Design Thinking Concepts Applied</h3>
             <p class="footer-intro">In this UX case study and problem statement formulation, the primary Design Thinking phases utilized are <strong>Empathize</strong> and <strong>Define</strong>.</p>
             
             <div class="dt-concepts">
-                <div class="glass-card">
-                    <h4 class="accent-teal">1. Empathize</h4>
+                <div class="theme-card">
+                    <h4 class="accent-1">1. Empathize</h4>
                     <p>Demonstrated by bringing <strong>Aarav Mehta</strong> to life and mapping his dynamic journey. We identified frustrations and behaviors of all stakeholders dynamically to truly understand user pain points.</p>
                 </div>
-                <div class="glass-card">
-                    <h4 class="accent-amber">2. Define</h4>
+                <div class="theme-card">
+                    <h4 class="accent-2">2. Define</h4>
                     <p>Synthesized our research to boldly articulate the <strong>Core Problem Statement</strong> right at the top of the page. We established the chain reaction of scattered communication to set a clear direction for Ideation.</p>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2026 UX Design Thinking Project &middot; Re-engineered Dynamically</p>
+                <p>&copy; 2026 UX Design Thinking Project &middot; Styled with Premium Theme</p>
             </div>
         </div>
     </footer>
