@@ -10,17 +10,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="dark">
+<body>
+    <!-- Defaulting to light theme (no class="dark" on body) -->
     <div class="theme-toggle-wrapper">
-        <button id="theme-toggle" title="Toggle Light/Dark Theme">🌓</button>
+        <button id="theme-toggle" title="Toggle Light/Dark Theme">🌙</button>
     </div>
 
-    <header class="hero">
-        <div class="container scroll-anim" data-anim="fade-up">
+    <!-- NEW: Split Layout Hero Section with Card Design -->
+    <header class="hero container split-layout mt-4 mb-4">
+        <div class="hero-content theme-card scroll-anim" data-anim="slide-right">
             <h1 class="gradient-text">Fixing the Fixes</h1>
             <h2>Apartment Maintenance UX Case Study</h2>
-            <p class="subtitle">Apartment maintenance reporting, tracking & accountability</p>
+            <p class="subtitle mt-2">Transforming the way apartment maintenance is reported, tracked, and held accountable through transparent design.</p>
             <div class="badge">Dynamic Design-Thinking Case Study</div>
+        </div>
+        
+        <div class="hero-visual theme-card scroll-anim" data-anim="slide-left">
+            <h4 class="font-mono accent-3 mb-2" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px;">System Flow Visualization</h4>
+            <pre id="ascii-anim" class="font-mono ascii-art"></pre>
         </div>
     </header>
 
@@ -46,7 +53,7 @@
                 </div>
             </div>
 
-            <div class="statement-card theme-card scroll-anim mt-4" data-anim="slide-left" style="transition-delay: 200ms;">
+            <div class="statement-card theme-card scroll-anim mt-4" data-anim="slide-up" style="transition-delay: 200ms;">
                 <h3 class="gradient-text">Primary Problem Statement</h3>
                 <p class="statement-text">Apartment residents struggle to get maintenance issues resolved efficiently because complaints are reported through fragmented communication channels, making it difficult to track requests, identify responsibility, and receive timely updates.</p>
                 
@@ -73,18 +80,18 @@
             <div class="persona-card theme-card scroll-anim" data-anim="slide-right">
                 <div class="persona-header">
                     <h3>Aarav Mehta</h3>
-                    <p class="font-mono">32 &middot; Software Engineer &middot; Apartment Resident</p>
+                    <p class="font-mono accent-3">32 &middot; Software Engineer &middot; Apartment Resident</p>
                 </div>
                 <blockquote class="persona-quote">
                     “I don't mind reporting the problem. I hate having to chase someone to find out what happened to it.”
                 </blockquote>
                 <div class="persona-grid">
                     <div>
-                        <h4>About Aarav</h4>
+                        <h4 class="mb-2">About Aarav</h4>
                         <p>Aarav lives in a mid-sized apartment community and works long hours. He wants routine household issues to require as little coordination as possible.</p>
                     </div>
                     <div>
-                        <h4>Needs</h4>
+                        <h4 class="mb-2">Needs</h4>
                         <div id="persona-needs" class="tags">
                             <!-- Injected dynamically via JS -->
                         </div>
@@ -121,7 +128,7 @@
             
             <div class="theme-card">
                 <h3>What does success look like?</h3>
-                <p class="mb-2">A better process should easily answer five simple questions:</p>
+                <p class="mb-4">A better process should easily answer five simple questions:</p>
                 <div id="success-metrics" class="grid-2">
                     <!-- Injected dynamically via JS -->
                 </div>
@@ -138,11 +145,11 @@
             
             <div class="dt-concepts">
                 <div class="theme-card">
-                    <h4 class="accent-1">1. Empathize</h4>
+                    <h4 class="accent-1 mb-2">1. Empathize</h4>
                     <p>Demonstrated by bringing <strong>Aarav Mehta</strong> to life and mapping his dynamic journey. We identified frustrations and behaviors of all stakeholders dynamically to truly understand user pain points.</p>
                 </div>
                 <div class="theme-card">
-                    <h4 class="accent-2">2. Define</h4>
+                    <h4 class="accent-2 mb-2">2. Define</h4>
                     <p>Synthesized our research to boldly articulate the <strong>Core Problem Statement</strong> right at the top of the page. We established the chain reaction of scattered communication to set a clear direction for Ideation.</p>
                 </div>
             </div>

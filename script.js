@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeToggle = document.getElementById('theme-toggle');
     themeToggle.addEventListener('click', () => {
         document.body.classList.toggle('dark');
-        // Toggle icon text optionally
         if (document.body.classList.contains('dark')) {
             themeToggle.textContent = '☀️';
         } else {
@@ -12,12 +11,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Setup initial icon
+    // Default is now Light theme, so no .dark class initially
     if (document.body.classList.contains('dark')) {
         themeToggle.textContent = '☀️';
     } else {
         themeToggle.textContent = '🌙';
     }
+
+    // --- ASCII ANIMATION --- //
+    const asciiContainer = document.getElementById('ascii-anim');
+    const asciiFrames = [];
+    const width = 36;
+    const height = 11;
+    
+    // Generate an abstract, dynamic wave animation in ASCII
+    for (let f = 0; f < 30; f++) {
+        let frame = "";
+        for (let y = 0; y < height; y++) {
+            let line = "";
+            for (let x = 0; x < width; x++) {
+                // Math logic for a beautiful sine wave representing 'flow' and 'system integration'
+                const waveY = Math.sin((x + f * 1.5) * 0.3) * 3 + (height / 2);
+                const dist = Math.abs(y - waveY);
+                
+                if (dist < 0.5) line += "█";
+                else if (dist < 1.2) line += "▓";
+                else if (dist < 2.0) line += "▒";
+                else if (dist < 3.0) line += "░";
+                else line += " ";
+            }
+            frame += line + "\n";
+        }
+        asciiFrames.push(frame);
+    }
+
+    let currentFrame = 0;
+    if (asciiContainer) {
+        setInterval(() => {
+            asciiContainer.textContent = asciiFrames[currentFrame];
+            currentFrame = (currentFrame + 1) % asciiFrames.length;
+        }, 100); // 10 FPS
+    }
+
 
     // --- DYNAMIC DATA --- //
     const personaNeeds = ['Clarity', 'Visibility', 'Ownership', 'Timely updates'];
@@ -61,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('persona-needs').innerHTML = personaNeeds
         .map(need => `<span>${need}</span>`).join('');
 
-    // Render Progress Bars (widths start at 0, filled via Observer)
+    // Render Progress Bars
     const progressHTML = snapshotData.map(item => `
         <div class="progress-row">
             <span class="label">${item.label}</span>
@@ -76,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Render Pain Points
     const painHTML = painPoints.map((p, index) => `
         <div class="dynamic-card scroll-anim" data-anim="fade-up" style="transition-delay: ${index * 100}ms;">
-            <h4 style="font-size: 1.2rem; margin-bottom: 0.5rem;">${p.icon} ${p.title}</h4>
+            <h4 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--primary);">${p.icon} ${p.title}</h4>
             <p style="color: var(--muted-foreground);">${p.desc}</p>
         </div>
     `).join('');
@@ -115,26 +150,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const scrollObserver = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                // Trigger structural animation
                 entry.target.classList.add('is-visible');
                 
-                // If this is the persona snapshot, trigger the progress bars to fill
                 if (entry.target.classList.contains('snapshot-container')) {
                     const fills = entry.target.querySelectorAll('.fill');
                     fills.forEach(fill => {
                         fill.style.width = fill.getAttribute('data-target');
                     });
                 }
-
                 observer.unobserve(entry.target);
             }
         });
     }, observerOptions);
 
-    // Re-select all elements with scroll-anim class (including newly injected ones)
     document.querySelectorAll('.scroll-anim').forEach(el => {
         scrollObserver.observe(el);
     });
 
-    console.log("Dynamic content rendered, theme toggle initialized, and advanced scroll animations active.");
+    console.log("Dynamic ASCII wave and scroll animations initialized.");
 });
