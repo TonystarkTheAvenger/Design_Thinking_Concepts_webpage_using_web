@@ -1,27 +1,121 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Implement an Intersection Observer for smooth fade-in animations as the user scrolls
+
+    // --- DYNAMIC DATA --- //
+    const personaNeeds = ['Clarity', 'Visibility', 'Ownership', 'Timely updates'];
+    
+    const snapshotData = [
+        { label: 'Tech comfort', score: 8, color: 'var(--accent-teal)' },
+        { label: 'Patience for follow-ups', score: 2, color: 'var(--accent-red)' },
+        { label: 'Need for transparency', score: 10, color: 'var(--accent-teal)' },
+        { label: 'Tolerance for ambiguity', score: 3, color: 'var(--accent-amber)' }
+    ];
+
+    const painPoints = [
+        { icon: "📱", title: "Fragmented reporting", desc: "Different residents use different channels, so requests are difficult to consolidate." },
+        { icon: "🔁", title: "Duplicate complaints", desc: "The same broken lift or leaking pipe may be reported by several residents." },
+        { icon: "⏰", title: "Weak prioritization", desc: "Urgent issues and cosmetic issues enter the same communication stream." },
+        { icon: "👤", title: "Missing ownership", desc: "A complaint can exist without a clearly visible person responsible." },
+        { icon: "👀", title: "No status visibility", desc: "Residents cannot tell whether an issue is new, assigned, or resolved." },
+        { icon: "📊", title: "No usable history", desc: "Recurring problems are difficult to spot without structured records." }
+    ];
+
+    const journeyData = [
+        { step: '01', title: 'Problem appears', desc: '🚰 Water leakage starts in the bathroom' },
+        { step: '02', title: 'Report', desc: '📱 Aarav sends a WhatsApp message with a photo' },
+        { step: '03', title: 'Waiting', desc: '⏳ No clear acknowledgement or expected resolution time' },
+        { step: '04', title: 'Follow-up', desc: '📞 Aarav asks the security desk / society office for an update' },
+        { step: '05', title: 'Assignment', desc: '🛠️ A maintenance worker is eventually contacted' },
+        { step: '06', title: 'Resolution', desc: '✅ Problem gets fixed — but the resident has no clear record' }
+    ];
+
+    const successMetrics = [
+        { q: "What is the problem?", a: "Clear description + evidence", icon: "📝" },
+        { q: "Where is it?", a: "Exact location", icon: "📍" },
+        { q: "Who owns it?", a: "Responsible person/team", icon: "👤" },
+        { q: "What happens next?", a: "Visible status / next action", icon: "🔄" },
+        { q: "When will it be resolved?", a: "Expected timeline or update", icon: "⏳" }
+    ];
+
+    // --- DYNAMIC RENDERING --- //
+    
+    // Render Persona Needs
+    document.getElementById('persona-needs').innerHTML = personaNeeds
+        .map(need => `<span>${need}</span>`).join('');
+
+    // Render Progress Bars (widths start at 0, filled via Observer)
+    const progressHTML = snapshotData.map(item => `
+        <div class="progress-row">
+            <span class="label">${item.label}</span>
+            <div class="progress-bar">
+                <div class="fill" data-target="${item.score * 10}%" style="background-color: ${item.color};"></div>
+            </div>
+            <span class="score">${item.score}/10</span>
+        </div>
+    `).join('');
+    document.getElementById('progress-container').innerHTML = progressHTML;
+
+    // Render Pain Points
+    const painHTML = painPoints.map((p, index) => `
+        <div class="dynamic-card scroll-anim" data-anim="fade-up" style="transition-delay: ${index * 100}ms;">
+            <h4 style="font-size: 1.2rem; margin-bottom: 0.5rem;">${p.icon} ${p.title}</h4>
+            <p style="color: var(--text-muted);">${p.desc}</p>
+        </div>
+    `).join('');
+    document.getElementById('pain-points-grid').innerHTML = painHTML;
+
+    // Render Journey
+    const journeyHTML = journeyData.map((j, index) => `
+        <div class="journey-step scroll-anim" data-anim="slide-left" style="transition-delay: ${index * 150}ms;">
+            <div class="step-num">STEP ${j.step}</div>
+            <h4 style="color: var(--accent-amber); font-size: 1.2rem;">${j.title}</h4>
+            <p>${j.desc}</p>
+        </div>
+    `).join('');
+    document.getElementById('journey-timeline').innerHTML = journeyHTML;
+
+    // Render Success Metrics
+    const successHTML = successMetrics.map((s, index) => `
+        <div class="success-item scroll-anim" data-anim="scale-in" style="transition-delay: ${index * 100}ms;">
+            <div class="icon">${s.icon}</div>
+            <div>
+                <h4 style="color: var(--accent-teal);">${s.q}</h4>
+                <p style="color: var(--text-muted);">➔ ${s.a}</p>
+            </div>
+        </div>
+    `).join('');
+    document.getElementById('success-metrics').innerHTML = successHTML;
+
+
+    // --- ADVANCED INTERSECTION OBSERVER --- //
     const observerOptions = {
         root: null,
         rootMargin: '0px',
-        threshold: 0.15 // Trigger when 15% of the element is visible
+        threshold: 0.15 
     };
 
-    const observer = new IntersectionObserver((entries, observer) => {
+    const scrollObserver = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                // Add the 'visible' class to trigger CSS transition
-                entry.target.classList.add('visible');
-                // Once visible, stop observing to keep it visible
+                // Trigger structural animation
+                entry.target.classList.add('is-visible');
+                
+                // If this is the persona snapshot, trigger the progress bars to fill
+                if (entry.target.classList.contains('snapshot-container')) {
+                    const fills = entry.target.querySelectorAll('.fill');
+                    fills.forEach(fill => {
+                        fill.style.width = fill.getAttribute('data-target');
+                    });
+                }
+
                 observer.unobserve(entry.target);
             }
         });
     }, observerOptions);
 
-    // Target all sections with the 'fade-in' class
-    const fadeElements = document.querySelectorAll('.fade-in');
-    fadeElements.forEach(el => {
-        observer.observe(el);
+    // Re-select all elements with scroll-anim class (including newly injected ones)
+    document.querySelectorAll('.scroll-anim').forEach(el => {
+        scrollObserver.observe(el);
     });
 
-    console.log("UX Case Study loaded and Intersection Observer initialized.");
+    console.log("Dynamic content rendered and advanced scroll animations initialized.");
 });

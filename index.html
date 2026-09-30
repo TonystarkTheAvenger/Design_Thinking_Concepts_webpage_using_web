@@ -8,62 +8,61 @@
 </head>
 <body>
     <header class="hero">
-        <div class="container">
-            <h1>Fixing the Fixes</h1>
+        <div class="container scroll-anim" data-anim="fade-up">
+            <h1 class="gradient-text">Fixing the Fixes</h1>
             <h2>Apartment Maintenance UX Case Study</h2>
             <p class="subtitle">Apartment maintenance reporting, tracking & accountability</p>
-            <div class="badge">Design-thinking case study &middot; Persona + Problem Statement</div>
+            <div class="badge">Dynamic Design-Thinking Case Study</div>
         </div>
     </header>
 
     <main class="container">
-        <!-- 01 The Situation -->
-        <section class="fade-in">
-            <h2 class="section-title"><span>01</span> The situation</h2>
-            <p>In apartment communities, maintenance problems are often reported through a mix of WhatsApp messages, phone calls, security staff, maintenance workers, and face-to-face conversations.</p>
-            <p>The issue is not simply that residents <strong>cannot report a problem</strong>. The deeper issue is that there is often no single, reliable flow for capturing the problem, deciding its priority, assigning responsibility, tracking progress, and communicating the outcome.</p>
-            <div class="highlight-box">
-                <strong>The result:</strong> residents follow up repeatedly, maintenance teams receive incomplete or duplicate information, and management has limited visibility into unresolved or recurring issues.
+        
+        <!-- NEW ORDER 1: Problem Statement -->
+        <section id="problem-statement" class="scroll-anim" data-anim="scale-in">
+            <h2 class="section-title"><span>01</span> The Core Problem</h2>
+            
+            <div class="glass-card root-cause-card">
+                <h3>The Root of the Problem</h3>
+                <p>The visible complaint is usually: <em>“my maintenance issue is taking too long.”</em></p>
+                <div class="chain-reaction">
+                    <div class="chain-item"><strong>Scattered communication</strong></div>
+                    <div class="chain-arrow">↓</div>
+                    <div class="chain-item">incomplete / duplicate information</div>
+                    <div class="chain-arrow">↓</div>
+                    <div class="chain-item">unclear priority &amp; ownership</div>
+                    <div class="chain-arrow">↓</div>
+                    <div class="chain-item">weak status visibility</div>
+                    <div class="chain-arrow">↓</div>
+                    <div class="chain-item highlight-red">frustration for everyone</div>
+                </div>
+            </div>
+
+            <div class="statement-card glass-card scroll-anim mt-4" data-anim="slide-left" style="transition-delay: 200ms;">
+                <h3 class="gradient-text">Primary Problem Statement</h3>
+                <p class="statement-text">Apartment residents struggle to get maintenance issues resolved efficiently because complaints are reported through fragmented communication channels, making it difficult to track requests, identify responsibility, and receive timely updates.</p>
+                
+                <div class="grid-3 mt-4">
+                    <div class="dynamic-card border-teal">
+                        <h4 class="accent-teal">USER</h4>
+                        <p>Apartment residents</p>
+                    </div>
+                    <div class="dynamic-card border-amber">
+                        <h4 class="accent-amber">NEED</h4>
+                        <p>A clear, reliable way to report, track, and understand issue progress.</p>
+                    </div>
+                    <div class="dynamic-card border-purple">
+                        <h4 class="accent-purple">BECAUSE</h4>
+                        <p>Current communication lacks visible ownership, priority, and status.</p>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- 02 Who is involved -->
-        <section class="fade-in">
-            <h2 class="section-title"><span>02</span> Who is involved?</h2>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>What they need</th>
-                            <th>Main friction</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>🏠 Resident</td>
-                            <td>Report a problem and know what happens next</td>
-                            <td>No status visibility</td>
-                        </tr>
-                        <tr>
-                            <td>🛠️ Maintenance staff</td>
-                            <td>Clear requests with location + details</td>
-                            <td>Requests arrive from multiple channels</td>
-                        </tr>
-                        <tr>
-                            <td>🧑‍💼 Society manager</td>
-                            <td>Prioritize, assign, and monitor issues</td>
-                            <td>No reliable overview</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- 03 Primary Persona -->
-        <section class="fade-in">
-            <h2 class="section-title"><span>03</span> Primary persona</h2>
-            <div class="persona-card">
+        <!-- NEW ORDER 2: Persona -->
+        <section id="persona">
+            <h2 class="section-title scroll-anim" data-anim="fade-up"><span>02</span> Primary Persona</h2>
+            <div class="persona-card glass-card scroll-anim" data-anim="slide-right">
                 <div class="persona-header">
                     <h3>Aarav Mehta</h3>
                     <p>32 &middot; Software Engineer &middot; Apartment Resident</p>
@@ -74,342 +73,73 @@
                 <div class="persona-grid">
                     <div>
                         <h4>About Aarav</h4>
-                        <p>Aarav lives in a mid-sized apartment community and works long hours. He is comfortable with technology, but he wants routine household issues to require as little coordination as possible.</p>
+                        <p>Aarav lives in a mid-sized apartment community and works long hours. He wants routine household issues to require as little coordination as possible.</p>
                     </div>
                     <div>
                         <h4>Needs</h4>
-                        <p class="tags">
-                            <span>Clarity</span> <span>Visibility</span> <span>Ownership</span> <span>Timely updates</span>
-                        </p>
-                    </div>
-                    <div>
-                        <h4>Goals</h4>
-                        <ul>
-                            <li>Get maintenance issues acknowledged quickly</li>
-                            <li>Know who is handling the issue</li>
-                            <li>See when the issue is expected to be resolved</li>
-                            <li>Avoid repeated calls and messages</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4>Frustrations</h4>
-                        <ul>
-                            <li>Complaints disappear inside busy WhatsApp groups</li>
-                            <li>He does not know whether a request was seen or assigned</li>
-                            <li>He has to repeat the same information to different people</li>
-                            <li>Urgent problems can feel no different from minor requests</li>
-                        </ul>
-                    </div>
-                    <div class="full-width">
-                        <h4>Behaviours</h4>
-                        <ul>
-                            <li>Takes a photo when the problem is visible</li>
-                            <li>Usually reports through the channel that feels fastest</li>
-                            <li>Follows up when there is no update</li>
-                            <li>Stops trusting the process after repeated delays</li>
-                        </ul>
+                        <div id="persona-needs" class="tags">
+                            <!-- Injected dynamically via JS -->
+                        </div>
                     </div>
                 </div>
+            </div>
+
+            <div class="snapshot-container glass-card mt-4 scroll-anim" data-anim="fade-up">
+                <h3 class="mb-2">Persona Snapshot</h3>
+                <!-- Progress bars are empty initially; filled via JS on scroll -->
+                <div id="progress-container"></div>
             </div>
         </section>
 
-        <!-- 04 Persona Snapshot -->
-        <section class="fade-in">
-            <h2 class="section-title"><span>04</span> Persona snapshot</h2>
-            <div class="snapshot-container">
-                <div class="progress-row">
-                    <span class="label">Tech comfort</span>
-                    <div class="progress-bar"><div class="fill fill-teal" style="width: 80%;"></div></div>
-                    <span class="score">8/10</span>
-                </div>
-                <div class="progress-row">
-                    <span class="label">Patience for follow-ups</span>
-                    <div class="progress-bar"><div class="fill fill-amber" style="width: 20%;"></div></div>
-                    <span class="score">2/10</span>
-                </div>
-                <div class="progress-row">
-                    <span class="label">Need for transparency</span>
-                    <div class="progress-bar"><div class="fill fill-teal" style="width: 100%;"></div></div>
-                    <span class="score">10/10</span>
-                </div>
-                <div class="progress-row">
-                    <span class="label">Tolerance for ambiguity</span>
-                    <div class="progress-bar"><div class="fill fill-amber" style="width: 30%;"></div></div>
-                    <span class="score">3/10</span>
-                </div>
+        <!-- Dynamic Pain Points -->
+        <section id="pain-points">
+            <h2 class="section-title scroll-anim" data-anim="fade-up"><span>03</span> Pain Points</h2>
+            <div id="pain-points-grid" class="grid-2">
+                <!-- Injected dynamically via JS -->
             </div>
         </section>
 
-        <!-- 05 What Aarav experiences today -->
-        <section class="fade-in">
-            <h2 class="section-title"><span>05</span> What Aarav experiences today</h2>
-            <h3>The maintenance journey</h3>
-            <div class="journey-timeline">
-                <div class="journey-step">
-                    <div class="step-num">01</div>
-                    <div class="step-content">
-                        <h4>Problem appears</h4>
-                        <p>🚰 Water leakage starts in the bathroom</p>
-                    </div>
-                </div>
-                <div class="journey-step">
-                    <div class="step-num">02</div>
-                    <div class="step-content">
-                        <h4>Report</h4>
-                        <p>📱 Aarav sends a WhatsApp message with a photo</p>
-                    </div>
-                </div>
-                <div class="journey-step">
-                    <div class="step-num">03</div>
-                    <div class="step-content">
-                        <h4>Waiting</h4>
-                        <p>⏳ No clear acknowledgement or expected resolution time</p>
-                    </div>
-                </div>
-                <div class="journey-step">
-                    <div class="step-num">04</div>
-                    <div class="step-content">
-                        <h4>Follow-up</h4>
-                        <p>📞 Aarav asks the security desk / society office for an update</p>
-                    </div>
-                </div>
-                <div class="journey-step">
-                    <div class="step-num">05</div>
-                    <div class="step-content">
-                        <h4>Assignment</h4>
-                        <p>🛠️ A maintenance worker is eventually contacted</p>
-                    </div>
-                </div>
-                <div class="journey-step">
-                    <div class="step-num">06</div>
-                    <div class="step-content">
-                        <h4>Resolution</h4>
-                        <p>✅ Problem gets fixed — but the resident may still have no clear record of what happened</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="friction-hotspots">
-                <h3>Friction hotspots</h3>
-                <div class="grid-2">
-                    <div class="card"><strong>Lost context</strong> — important details can be buried in conversations.</div>
-                    <div class="card"><strong>No ownership</strong> — residents may not know who is responsible.</div>
-                    <div class="card"><strong>No visibility</strong> — silence feels like inaction.</div>
-                    <div class="card"><strong>Repeated communication</strong> — the resident becomes the tracker.</div>
-                </div>
+        <!-- Dynamic Journey Timeline -->
+        <section id="journey">
+            <h2 class="section-title scroll-anim" data-anim="fade-up"><span>04</span> The Resident's Journey Today</h2>
+            <div id="journey-timeline" class="journey-timeline">
+                <!-- Injected dynamically via JS -->
             </div>
         </section>
 
-        <!-- 06 Pain points -->
-        <section class="fade-in">
-            <h2 class="section-title"><span>06</span> Pain points</h2>
-            <div class="grid-2">
-                <div class="pain-card">
-                    <h4>📱 Fragmented reporting</h4>
-                    <p>Different residents use different channels, so requests are difficult to consolidate.</p>
-                </div>
-                <div class="pain-card">
-                    <h4>🔁 Duplicate complaints</h4>
-                    <p>The same broken lift or leaking pipe may be reported by several residents, creating noise instead of clarity.</p>
-                </div>
-                <div class="pain-card">
-                    <h4>⏰ Weak prioritization</h4>
-                    <p>Urgent issues and cosmetic issues may enter the same communication stream without a consistent priority signal.</p>
-                </div>
-                <div class="pain-card">
-                    <h4>👤 Missing ownership</h4>
-                    <p>A complaint can exist without a clearly visible person or team responsible for the next action.</p>
-                </div>
-                <div class="pain-card">
-                    <h4>👀 No status visibility</h4>
-                    <p>Residents often cannot tell whether an issue is new, acknowledged, assigned, in progress, or resolved.</p>
-                </div>
-                <div class="pain-card">
-                    <h4>📊 No usable history</h4>
-                    <p>Recurring problems are difficult to spot when there is no structured record of previous incidents.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- 07 Root of the problem -->
-        <section class="fade-in">
-            <h2 class="section-title"><span>07</span> Root of the problem</h2>
-            <p>The visible complaint is <strong>“my maintenance issue is taking too long.”</strong></p>
-            <div class="root-cause">
-                <p>The underlying system problem is:</p>
-                <h3 class="accent-purple">Scattered communication</h3>
-                <ul class="arrow-list">
-                    <li>incomplete / duplicate information</li>
-                    <li>unclear priority</li>
-                    <li>unclear ownership</li>
-                    <li>weak status visibility</li>
-                    <li>repeated follow-ups</li>
-                    <li>frustration for everyone</li>
-                </ul>
-            </div>
-            <div class="insight-box">
-                <strong>Core insight:</strong> The communication process is fragmented, not merely the complaint form.
-            </div>
-        </section>
-
-        <!-- 08 Problem statement -->
-        <section class="fade-in">
-            <h2 class="section-title"><span>08</span> Problem statement</h2>
-            <div class="statement-card">
-                <h3>Primary statement</h3>
-                <p class="statement-text">Apartment residents struggle to get maintenance issues resolved efficiently because complaints are reported through fragmented communication channels, making it difficult to track requests, identify responsibility, and receive timely updates.</p>
-            </div>
-            <div class="grid-3 mt-2">
-                <div class="card">
-                    <h4 class="accent-teal">USER</h4>
-                    <p>Apartment residents</p>
-                </div>
-                <div class="card">
-                    <h4 class="accent-amber">NEED</h4>
-                    <p>A clear and reliable way to report, track, and understand the progress of maintenance issues</p>
-                </div>
-                <div class="card">
-                    <h4 class="accent-purple">BECAUSE</h4>
-                    <p>Current communication is scattered across multiple channels and often lacks visible ownership, priority, and status</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- 09 Design opportunity -->
-        <section class="fade-in">
-            <h2 class="section-title"><span>09</span> Design opportunity</h2>
-            <div class="hmw-box">
-                <h3>How might we…</h3>
-                <p>How might we make apartment maintenance issues easier to report, easier to prioritize, and easier for residents to follow from report to resolution?</p>
-                <small>Important: This is an opportunity area, not the solution yet.</small>
-            </div>
-        </section>
-
-        <!-- 10 What should be validated? -->
-        <section class="fade-in">
-            <h2 class="section-title"><span>10</span> What should be validated?</h2>
-            <p>This persona and problem statement are <strong>working hypotheses</strong> until real users are interviewed.</p>
+        <!-- Validation & Success -->
+        <section id="validation" class="scroll-anim" data-anim="scale-in">
+            <h2 class="section-title"><span>05</span> Validation &amp; Success Metrics</h2>
             
-            <div class="grid-3 mt-2">
-                <div class="validation-card">
-                    <h4>Ask residents</h4>
-                    <ul>
-                        <li>How do you currently report maintenance problems?</li>
-                        <li>What happens after you report one?</li>
-                        <li>How do you know whether it has been assigned?</li>
-                        <li>How often do you follow up?</li>
-                        <li>Have you ever reported the same issue more than once?</li>
-                    </ul>
-                </div>
-                <div class="validation-card">
-                    <h4>Ask maintenance staff</h4>
-                    <ul>
-                        <li>Where do requests come from?</li>
-                        <li>Which details are usually missing?</li>
-                        <li>How do you decide what to handle first?</li>
-                        <li>How often do multiple people report the same issue?</li>
-                    </ul>
-                </div>
-                <div class="validation-card">
-                    <h4>Ask management</h4>
-                    <ul>
-                        <li>How are complaints currently tracked?</li>
-                        <li>Which issues become overdue most often?</li>
-                        <li>Can you identify recurring problems?</li>
-                        <li>How do you know whether a complaint is actually resolved?</li>
-                    </ul>
+            <div class="glass-card">
+                <h3>What does success look like?</h3>
+                <p class="mb-2">A better process should easily answer five simple questions:</p>
+                <div id="success-metrics" class="grid-2">
+                    <!-- Injected dynamically via JS -->
                 </div>
             </div>
         </section>
 
-        <!-- 11 Success looks like -->
-        <section class="fade-in">
-            <h2 class="section-title"><span>11</span> Success looks like</h2>
-            <p>A better process should make it easier to answer five simple questions:</p>
-            <ul class="success-list">
-                <li><strong>What is the problem?</strong> &rarr; Clear description + evidence</li>
-                <li><strong>Where is it?</strong> &rarr; Exact location</li>
-                <li><strong>Who owns it?</strong> &rarr; Responsible person/team</li>
-                <li><strong>What happens next?</strong> &rarr; Visible status / next action</li>
-                <li><strong>When will it be resolved?</strong> &rarr; Expected timeline or update</li>
-            </ul>
-
-            <div class="grid-2 mt-2">
-                <div class="card border-teal">
-                    <h4 class="accent-teal">💡 Why this is a strong design-thinking problem</h4>
-                    <p>It involves multiple users, competing priorities, repeated communication, uncertainty, and a real service journey. That gives you room to demonstrate observation, persona creation, pain-point analysis, problem framing, and eventually solution exploration without jumping straight to "build an app."</p>
-                </div>
-                <div class="card border-amber">
-                    <h4 class="accent-amber">🧠 One-line takeaway</h4>
-                    <p>The problem is not reporting a maintenance issue. The problem is the lack of a trustworthy system between reporting the issue and knowing that it is actually being handled.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- 12 What we know & what we Don’t know -->
-        <section class="fade-in mb-4">
-            <h2 class="section-title"><span>12</span> What we know &amp; what we Don’t know</h2>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>What We Know</th>
-                            <th>What We Don’t Know</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Residents use multiple ways to report maintenance issues.</td>
-                            <td>Which reporting method do residents prefer most?</td>
-                        </tr>
-                        <tr>
-                            <td>Complaints can be difficult to track after being reported.</td>
-                            <td>How often do complaints get missed or forgotten?</td>
-                        </tr>
-                        <tr>
-                            <td>Residents may not receive regular updates on their complaints.</td>
-                            <td>How frequently do residents expect status updates?</td>
-                        </tr>
-                        <tr>
-                            <td>Some maintenance issues take longer than expected to resolve.</td>
-                            <td>What causes the biggest delays in resolution?</td>
-                        </tr>
-                        <tr>
-                            <td>Multiple residents can report the same issue.</td>
-                            <td>How does management currently handle duplicate complaints?</td>
-                        </tr>
-                        <tr>
-                            <td>Maintenance staff receive requests from different sources.</td>
-                            <td>How do staff decide which complaints to handle first?</td>
-                        </tr>
-                        <tr>
-                            <td>Residents often need to follow up to know the status of an issue.</td>
-                            <td>What would make residents feel that their complaint is being properly handled?</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
     </main>
 
     <!-- Footer for Design Thinking Concepts -->
     <footer class="dt-footer">
-        <div class="container">
+        <div class="container scroll-anim" data-anim="fade-up">
             <h3>Design Thinking Concepts Applied</h3>
-            <p class="footer-intro">In this UX case study and specifically within the problem statement formulation, the primary Design Thinking phases utilized are <strong>Empathize</strong> and <strong>Define</strong>.</p>
+            <p class="footer-intro">In this UX case study and problem statement formulation, the primary Design Thinking phases utilized are <strong>Empathize</strong> and <strong>Define</strong>.</p>
             
             <div class="dt-concepts">
-                <div class="dt-card">
+                <div class="glass-card">
                     <h4 class="accent-teal">1. Empathize</h4>
-                    <p>We demonstrated this phase by creating the Persona (Aarav Mehta) and mapping out the resident's journey (What Aarav experiences today). By identifying the frustrations, behaviors, and needs of all stakeholders (residents, maintenance staff, and management), we deeply understood the user pain points without prematurely jumping to solutions.</p>
+                    <p>Demonstrated by bringing <strong>Aarav Mehta</strong> to life and mapping his dynamic journey. We identified frustrations and behaviors of all stakeholders dynamically to truly understand user pain points.</p>
                 </div>
-                <div class="dt-card">
+                <div class="glass-card">
                     <h4 class="accent-amber">2. Define</h4>
-                    <p>We synthesized the empathic research to clearly articulate the core issue (Section 07: Root of the Problem). By turning "my maintenance is taking too long" into a structured <strong>Problem Statement</strong> (Section 08) and framing the challenge with <em>"How might we..."</em> questions (Section 09), we successfully set a clear, actionable direction for the upcoming Ideation phase.</p>
+                    <p>Synthesized our research to boldly articulate the <strong>Core Problem Statement</strong> right at the top of the page. We established the chain reaction of scattered communication to set a clear direction for Ideation.</p>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2026 UX Design Thinking Project</p>
+                <p>&copy; 2026 UX Design Thinking Project &middot; Re-engineered Dynamically</p>
             </div>
         </div>
     </footer>
