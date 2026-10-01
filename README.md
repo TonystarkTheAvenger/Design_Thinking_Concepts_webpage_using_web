@@ -1,25 +1,14 @@
-# Apartment Maintenance UX Case Study
+# 🛠️ Fixing the Fixes
+*A UX case study on apartment maintenance—reimagined.*
 
-This repository contains a web-based presentation of the "Fixing the Fixes" Apartment Maintenance UX Case Study. It visualizes the challenges residents, maintenance staff, and society managers face in reporting and tracking maintenance issues.
+We took a fragmented, frustrating process and applied core **Design Thinking** principles (Empathize & Define) to figure out *why* things break down between a leaky pipe and a fixed one.
 
-## Technologies Used
-- **HTML5**: Semantic structuring of case study sections.
-- **CSS3**: Dark Theme utilizing rich colors (primarily grey, black, teal, amber, and purple), Flexbox, CSS Grid, and custom properties.
-- **Vanilla JavaScript**: Intersection Observer for smooth scroll animations.
+### ✨ The Vibe
+- **Dynamic UI**: A slick, card-based split layout.
+- **Light & Dark Mode**: A custom, premium color palette with a seamless toggle.
+- **ASCII Art**: A custom JS-generated ASCII wave animation running live in the hero section.
+- **Smooth Scrolling**: Vanilla JS intersection observers making everything glide into place.
 
-## Design Thinking Concepts Applied
+Built purely with **HTML, CSS, & Vanilla JS**. 
 
-This project and problem statement strongly utilize the **Empathize** and **Define** stages of the Design Thinking process:
-
-1. **Empathize**: 
-   - Created a comprehensive user persona (Aarav Mehta).
-   - Mapped out the resident's journey (What Aarav experiences today).
-   - Explored the friction, frustrations, behaviors, and needs of all stakeholders (residents, maintenance staff, and management) to deeply understand user pain points without prematurely jumping to solutions.
-
-2. **Define**: 
-   - Synthesized the empathic research to clearly articulate the core issue: the root cause is fragmented communication.
-   - Formulated a definitive **Problem Statement**.
-   - Framed the challenge using *"How might we..."* questions to set a clear, actionable direction for the upcoming Ideation phase.
-
-## Setup
-Simply open `index.html` in any modern web browser to view the case study.
+Drop in, open `index.html`, and enjoy the scroll. ✌️
