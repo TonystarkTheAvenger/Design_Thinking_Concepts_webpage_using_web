@@ -4,80 +4,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fixing the Fixes — UX Case Study</title>
-    <!-- Importing fonts required by the new theme -->
+    <!-- Importing fonts required by the theme -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Defaulting to light theme (no class="dark" on body) -->
+    <!-- Ambient Animated Background -->
+    <div id="ambient-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
     <div class="theme-toggle-wrapper">
         <button id="theme-toggle" title="Toggle Light/Dark Theme">🌙</button>
     </div>
 
-    <!-- NEW: Split Layout Hero Section with Card Design -->
+    <!-- 0. HERO SECTION -->
     <header class="hero container split-layout mt-4 mb-4">
-        <div class="hero-content theme-card scroll-anim" data-anim="slide-right">
-            <h1 class="gradient-text">Fixing the Fixes</h1>
+        <div class="hero-content theme-card scroll-anim interactive-card" data-anim="slide-right">
+            <h1 class="gradient-text" id="typewriter-title"></h1>
             <h2>Apartment Maintenance UX Case Study</h2>
             <p class="subtitle mt-2">Transforming the way apartment maintenance is reported, tracked, and held accountable through transparent design.</p>
             <div class="badge">Dynamic Design-Thinking Case Study</div>
         </div>
         
-        <div class="hero-visual theme-card scroll-anim" data-anim="slide-left">
+        <div class="hero-visual theme-card scroll-anim interactive-card" data-anim="slide-left">
             <h4 class="font-mono accent-3 mb-2" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px;">System Flow Visualization</h4>
             <pre id="ascii-anim" class="font-mono ascii-art"></pre>
         </div>
     </header>
 
     <main class="container">
-        
-        <!-- Problem Statement -->
-        <section id="problem-statement" class="scroll-anim" data-anim="scale-in">
-            <h2 class="section-title"><span>01</span> The Core Problem</h2>
-            
-            <div class="theme-card root-cause-card">
-                <h3>The Root of the Problem</h3>
-                <p>The visible complaint is usually: <em>“my maintenance issue is taking too long.”</em></p>
-                <div class="chain-reaction">
-                    <div class="chain-item"><strong>Scattered communication</strong></div>
-                    <div class="chain-arrow">↓</div>
-                    <div class="chain-item">incomplete / duplicate information</div>
-                    <div class="chain-arrow">↓</div>
-                    <div class="chain-item">unclear priority &amp; ownership</div>
-                    <div class="chain-arrow">↓</div>
-                    <div class="chain-item">weak status visibility</div>
-                    <div class="chain-arrow">↓</div>
-                    <div class="chain-item highlight-red">frustration for everyone</div>
-                </div>
-            </div>
 
-            <div class="statement-card theme-card scroll-anim mt-4" data-anim="slide-up" style="transition-delay: 200ms;">
-                <h3 class="gradient-text">Primary Problem Statement</h3>
-                <p class="statement-text">Apartment residents struggle to get maintenance issues resolved efficiently because complaints are reported through fragmented communication channels, making it difficult to track requests, identify responsibility, and receive timely updates.</p>
-                
-                <div class="grid-3 mt-4">
-                    <div class="dynamic-card border-1">
-                        <h4 class="accent-1">USER</h4>
-                        <p>Apartment residents</p>
-                    </div>
-                    <div class="dynamic-card border-2">
-                        <h4 class="accent-2">NEED</h4>
-                        <p>A clear, reliable way to report, track, and understand issue progress.</p>
-                    </div>
-                    <div class="dynamic-card border-3">
-                        <h4 class="accent-3">BECAUSE</h4>
-                        <p>Current communication lacks visible ownership, priority, and status.</p>
-                    </div>
+        <!-- 1. THE APPROACH (Design Thinking moved to top) -->
+        <section id="dt-context" class="scroll-anim" data-anim="fade-up">
+            <h2 class="section-title"><span>01</span> The Approach</h2>
+            <p class="mb-4 subtitle">Before jumping to solutions, we must understand the people and define the real issue. This study applies two core <strong>Design Thinking</strong> phases.</p>
+            <div class="grid-2">
+                <div class="theme-card interactive-card">
+                    <h4 class="accent-1 mb-2">1. Empathize</h4>
+                    <p>We start by mapping the user journey to truly feel the frustrations, scattered communications, and delays experienced by residents and staff alike.</p>
+                </div>
+                <div class="theme-card interactive-card">
+                    <h4 class="accent-2 mb-2">2. Define</h4>
+                    <p>We synthesize that empathy into a crystal-clear problem statement, ensuring we are solving the <em>root cause</em>, not just the symptoms.</p>
                 </div>
             </div>
         </section>
 
-        <!-- Persona -->
+        <!-- 2. THE JOURNEY -->
+        <section id="journey">
+            <h2 class="section-title scroll-anim" data-anim="fade-up"><span>02</span> The Resident's Journey Today</h2>
+            <p class="mb-4 subtitle scroll-anim" data-anim="fade-up">A step-by-step look at how a simple maintenance issue currently unfolds.</p>
+            <div id="journey-timeline" class="journey-timeline">
+                <!-- Injected dynamically via JS -->
+            </div>
+        </section>
+
+        <!-- 3. THE PAIN POINTS -->
+        <section id="pain-points">
+            <h2 class="section-title scroll-anim" data-anim="fade-up"><span>03</span> Identifying Friction</h2>
+            <p class="mb-4 subtitle scroll-anim" data-anim="fade-up">The journey mapping reveals several critical breakdown points in the current system.</p>
+            <div id="pain-points-grid" class="grid-2">
+                <!-- Injected dynamically via JS -->
+            </div>
+        </section>
+
+        <!-- 4. THE PERSONA -->
         <section id="persona">
-            <h2 class="section-title scroll-anim" data-anim="fade-up"><span>02</span> Primary Persona</h2>
-            <div class="persona-card theme-card scroll-anim" data-anim="slide-right">
+            <h2 class="section-title scroll-anim" data-anim="fade-up"><span>04</span> Primary Persona</h2>
+            <div class="persona-card theme-card scroll-anim interactive-card" data-anim="scale-in">
                 <div class="persona-header">
                     <h3>Aarav Mehta</h3>
                     <p class="font-mono accent-3">32 &middot; Software Engineer &middot; Apartment Resident</p>
@@ -99,36 +97,61 @@
                 </div>
             </div>
 
-            <div class="snapshot-container theme-card mt-4 scroll-anim" data-anim="fade-up">
+            <div class="snapshot-container theme-card mt-4 scroll-anim interactive-card" data-anim="fade-up">
                 <h3 class="mb-2">Persona Snapshot</h3>
                 <!-- Progress bars are empty initially; filled via JS on scroll -->
                 <div id="progress-container"></div>
             </div>
         </section>
 
-        <!-- Dynamic Pain Points -->
-        <section id="pain-points">
-            <h2 class="section-title scroll-anim" data-anim="fade-up"><span>03</span> Pain Points</h2>
-            <div id="pain-points-grid" class="grid-2">
-                <!-- Injected dynamically via JS -->
-            </div>
-        </section>
-
-        <!-- Dynamic Journey Timeline -->
-        <section id="journey">
-            <h2 class="section-title scroll-anim" data-anim="fade-up"><span>04</span> The Resident's Journey Today</h2>
-            <div id="journey-timeline" class="journey-timeline">
-                <!-- Injected dynamically via JS -->
-            </div>
-        </section>
-
-        <!-- Validation & Success -->
-        <section id="validation" class="scroll-anim" data-anim="scale-in">
-            <h2 class="section-title"><span>05</span> Validation &amp; Success Metrics</h2>
+        <!-- 5. THE PROBLEM STATEMENT (The Climax) -->
+        <section id="problem-statement" class="scroll-anim" data-anim="scale-in">
+            <h2 class="section-title"><span>05</span> The Core Problem</h2>
             
-            <div class="theme-card">
+            <div class="theme-card root-cause-card interactive-card mb-4">
+                <h3>The Root of the Problem</h3>
+                <p>The visible complaint is usually: <em>“my maintenance issue is taking too long.”</em></p>
+                <div class="chain-reaction">
+                    <div class="chain-item"><strong>Scattered communication</strong></div>
+                    <div class="chain-arrow">↓</div>
+                    <div class="chain-item">incomplete / duplicate information</div>
+                    <div class="chain-arrow">↓</div>
+                    <div class="chain-item">unclear priority &amp; ownership</div>
+                    <div class="chain-arrow">↓</div>
+                    <div class="chain-item">weak status visibility</div>
+                    <div class="chain-arrow">↓</div>
+                    <div class="chain-item highlight-red">frustration for everyone</div>
+                </div>
+            </div>
+
+            <div class="statement-card theme-card scroll-anim interactive-card" data-anim="slide-up">
+                <h3 class="gradient-text" style="font-size: 1.8rem; margin-bottom: 1rem;">Primary Problem Statement</h3>
+                <p class="statement-text" style="font-size: 1.2rem; line-height: 1.8;">Apartment residents struggle to get maintenance issues resolved efficiently because complaints are reported through fragmented communication channels, making it difficult to track requests, identify responsibility, and receive timely updates.</p>
+                
+                <div class="grid-3 mt-4">
+                    <div class="dynamic-card border-1">
+                        <h4 class="accent-1">USER</h4>
+                        <p>Apartment residents</p>
+                    </div>
+                    <div class="dynamic-card border-2">
+                        <h4 class="accent-2">NEED</h4>
+                        <p>A clear, reliable way to report, track, and understand issue progress.</p>
+                    </div>
+                    <div class="dynamic-card border-3">
+                        <h4 class="accent-3">BECAUSE</h4>
+                        <p>Current communication lacks visible ownership, priority, and status.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. VALIDATION & SUCCESS -->
+        <section id="validation" class="scroll-anim" data-anim="fade-up">
+            <h2 class="section-title"><span>06</span> Validation &amp; Success Metrics</h2>
+            
+            <div class="theme-card interactive-card">
                 <h3>What does success look like?</h3>
-                <p class="mb-4">A better process should easily answer five simple questions:</p>
+                <p class="mb-4">If we successfully solve the core problem, the new system should easily answer these five simple questions at any given time:</p>
                 <div id="success-metrics" class="grid-2">
                     <!-- Injected dynamically via JS -->
                 </div>
@@ -137,24 +160,12 @@
 
     </main>
 
-    <!-- Footer for Design Thinking Concepts -->
     <footer class="dt-footer">
         <div class="container scroll-anim" data-anim="fade-up">
-            <h3 class="font-serif">Design Thinking Concepts Applied</h3>
-            <p class="footer-intro">In this UX case study and problem statement formulation, the primary Design Thinking phases utilized are <strong>Empathize</strong> and <strong>Define</strong>.</p>
-            
-            <div class="dt-concepts">
-                <div class="theme-card">
-                    <h4 class="accent-1 mb-2">1. Empathize</h4>
-                    <p>Demonstrated by bringing <strong>Aarav Mehta</strong> to life and mapping his dynamic journey. We identified frustrations and behaviors of all stakeholders dynamically to truly understand user pain points.</p>
-                </div>
-                <div class="theme-card">
-                    <h4 class="accent-2 mb-2">2. Define</h4>
-                    <p>Synthesized our research to boldly articulate the <strong>Core Problem Statement</strong> right at the top of the page. We established the chain reaction of scattered communication to set a clear direction for Ideation.</p>
-                </div>
-            </div>
+            <h3 class="font-serif gradient-text">Ready for Ideation</h3>
+            <p class="footer-intro mt-2">With empathy established and the problem defined, we are now ready to begin ideating solutions.</p>
             <div class="footer-bottom">
-                <p>&copy; 2026 UX Design Thinking Project &middot; Styled with Premium Theme</p>
+                <p>&copy; 2026 UX Design Thinking Project &middot; Fully Animated & Dynamic</p>
             </div>
         </div>
     </footer>
