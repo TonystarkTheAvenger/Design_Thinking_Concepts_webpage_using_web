@@ -122,7 +122,20 @@ body {
 #ambient-bg {
   position: fixed;
   top: 0; left: 0; width: 100vw; height: 100vh;
-  z-index: -1; overflow: hidden; pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background-image: 
+    radial-gradient(rgba(71, 136, 0, 0.15) 1px, transparent 1px),
+    linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+  background-size: 28px 28px, 112px 112px, 112px 112px;
+}
+.dark #ambient-bg {
+  background-image: 
+    radial-gradient(rgba(93, 178, 0, 0.2) 1px, transparent 1px),
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
 }
 
 #bg-canvas {
@@ -131,7 +144,7 @@ body {
   pointer-events: none;
   opacity: 1;
 }
-.dark #bg-canvas { opacity: 0.95; }
+.dark #bg-canvas { opacity: 1; }
 
 /* Cursor interaction is drawn natively in the CAD canvas reticle */
 #cursor-glow {
@@ -237,6 +250,7 @@ button:active, .primary-btn:active, .secondary-btn:active, .icon-btn:active, .fi
   min-height: 100vh; 
   display: flex; 
   position: relative; 
+  z-index: 1;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -633,7 +647,9 @@ button:active, .primary-btn:active, .secondary-btn:active, .icon-btn:active, .fi
 }
 .stat-card {
   border: 1px solid var(--line);
-  background: var(--card);
+  background: rgba(244, 239, 228, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   color: var(--foreground);
   border-radius: var(--radius);
   padding: 20px;
@@ -643,6 +659,9 @@ button:active, .primary-btn:active, .secondary-btn:active, .icon-btn:active, .fi
   cursor: pointer;
   display: flex;
   flex-direction: column;
+}
+.dark .stat-card {
+  background: rgba(28, 28, 28, 0.82);
 }
 .stat-card:hover {
   border-color: var(--accent);
@@ -668,11 +687,16 @@ button:active, .primary-btn:active, .secondary-btn:active, .icon-btn:active, .fi
   gap: 20px;
 }
 .panel {
-  background: var(--card);
+  background: rgba(244, 239, 228, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.dark .panel {
+  background: rgba(28, 28, 28, 0.82);
 }
 .panel:hover {
   border-color: rgba(71, 136, 0, 0.3);

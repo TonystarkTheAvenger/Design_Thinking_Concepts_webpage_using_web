@@ -237,5 +237,100 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollObserver.observe(el);
     });
 
+    // --- 7. INTERACTIVE ARCHITECTURAL BACKGROUND --- //
+    const bgCanvas = document.getElementById('bg-canvas');
+    if (bgCanvas) {
+        const ctx = bgCanvas.getContext('2d');
+        let width = 0, height = 0, dpr = 1;
+        function resizeBg() {
+            dpr = window.devicePixelRatio || 1;
+            width = window.innerWidth;
+            height = window.innerHeight;
+            bgCanvas.width = Math.floor(width * dpr);
+            bgCanvas.height = Math.floor(height * dpr);
+            bgCanvas.style.width = `${width}px`;
+            bgCanvas.style.height = `${height}px`;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        resizeBg();
+        window.addEventListener('resize', resizeBg);
+
+        const mouse = { x: width / 2, y: height / 2, active: false, radius: 150 };
+        window.addEventListener('pointermove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            mouse.active = true;
+        });
+        window.addEventListener('pointerleave', () => { mouse.active = false; });
+
+        const waves = [];
+        window.addEventListener('click', (e) => {
+            waves.push({ x: e.clientX, y: e.clientY, radius: 4, maxRadius: Math.max(width, height) * 0.9, speed: 6.5, amplitude: 22, decay: 0.982 });
+        });
+
+        const CONTOUR_COUNT = 8;
+        const CONTOUR_POINTS = 26;
+
+        function renderBg(time) {
+            ctx.clearRect(0, 0, width, height);
+            const isDark = document.body.classList.contains('dark');
+            const scheeleRgb = isDark ? '93, 178, 0' : '71, 136, 0';
+
+            for (let w = waves.length - 1; w >= 0; w--) {
+                const wave = waves[w];
+                wave.radius += wave.speed;
+                wave.amplitude *= wave.decay;
+                if (wave.amplitude < 0.25 || wave.radius >= wave.maxRadius) { waves.splice(w, 1); continue; }
+                ctx.beginPath();
+                ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(${scheeleRgb}, ${Math.min(0.3, (wave.amplitude / 22) * 0.3)})`;
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
+            }
+
+            ctx.lineWidth = 1.6;
+            for (let i = 0; i < CONTOUR_COUNT; i++) {
+                const yBase = (height / (CONTOUR_COUNT + 1)) * (i + 1);
+                const freq = 0.0011 + i * 0.00025;
+                const phase = i * 0.85;
+                const baseAmp = 16 + i * 4;
+
+                ctx.beginPath();
+                let first = true;
+                for (let j = 0; j <= CONTOUR_POINTS; j++) {
+                    const bx = (width / CONTOUR_POINTS) * j;
+                    let by = yBase + Math.sin(time * freq + j * 0.28 + phase) * baseAmp;
+                    if (mouse.active) {
+                        const dist = Math.hypot(bx - mouse.x, by - mouse.y);
+                        if (dist < mouse.radius && dist > 0) {
+                            by += ((by - mouse.y) / dist) * (1 - dist / mouse.radius) * 35;
+                        }
+                    }
+                    for (const wave of waves) {
+                        const dist = Math.hypot(bx - wave.x, by - wave.y);
+                        const waveDiff = dist - wave.radius;
+                        if (Math.abs(waveDiff) < 65) {
+                            by += Math.cos((waveDiff / 65) * Math.PI * 0.5) * wave.amplitude * 1.5;
+                        }
+                    }
+                    if (first) { ctx.moveTo(bx, by); first = false; } else { ctx.lineTo(bx, by); }
+                }
+                const opacity = isDark ? (0.20 + (i / CONTOUR_COUNT) * 0.30) : (0.16 + (i / CONTOUR_COUNT) * 0.26);
+                ctx.strokeStyle = `rgba(${scheeleRgb}, ${opacity})`;
+                ctx.stroke();
+            }
+
+            if (mouse.active) {
+                ctx.beginPath();
+                ctx.arc(mouse.x, mouse.y, 18, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(${scheeleRgb}, 0.4)`;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+            requestAnimationFrame(renderBg);
+        }
+        requestAnimationFrame(renderBg);
+    }
+
     console.log("Navigation, animations, and UI polish successfully loaded.");
 });

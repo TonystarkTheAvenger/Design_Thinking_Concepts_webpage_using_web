@@ -969,13 +969,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const CONTOUR_POINTS = 30;
 
     function renderContours(scheeleRgb, isDark, time) {
-      ctx.lineWidth = 1.3;
+      ctx.lineWidth = 1.8;
 
       for (let i = 0; i < CONTOUR_COUNT; i++) {
         const yBase = (height / (CONTOUR_COUNT + 1)) * (i + 1);
         const freq = 0.0011 + i * 0.00025;
         const phase = i * 0.85;
-        const baseAmp = 16 + i * 4.5;
+        const baseAmp = 18 + i * 5;
 
         ctx.beginPath();
         let first = true;
@@ -992,7 +992,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const dist = Math.hypot(dx, dy);
             if (dist < mouse.radius && dist > 0) {
               const force = (1 - dist / mouse.radius);
-              by += (dy / dist) * force * 38;
+              by += (dy / dist) * force * 45;
             }
           }
 
@@ -1002,9 +1002,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const dy = by - wave.y;
             const dist = Math.hypot(dx, dy);
             const waveDiff = dist - wave.radius;
-            if (Math.abs(waveDiff) < 65) {
-              const waveRatio = Math.cos((waveDiff / 65) * Math.PI * 0.5);
-              by += waveRatio * wave.amplitude * 1.6;
+            if (Math.abs(waveDiff) < 70) {
+              const waveRatio = Math.cos((waveDiff / 70) * Math.PI * 0.5);
+              by += waveRatio * wave.amplitude * 1.8;
             }
           }
 
@@ -1017,18 +1017,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const opacity = isDark 
-          ? (0.12 + (i / CONTOUR_COUNT) * 0.24)
-          : (0.10 + (i / CONTOUR_COUNT) * 0.20);
+          ? (0.24 + (i / CONTOUR_COUNT) * 0.36)
+          : (0.18 + (i / CONTOUR_COUNT) * 0.32);
         ctx.strokeStyle = `rgba(${scheeleRgb}, ${opacity})`;
         ctx.stroke();
 
-        // Small architectural survey markers along contours
+        // Architectural survey markers along contours
         if (i % 2 === 1) {
-          const markerX = ((i * 140 + time * 0.02) % (width - 140)) + 70;
+          const markerX = ((i * 150 + time * 0.025) % (width - 140)) + 70;
           const markerY = yBase + Math.sin(time * freq + (markerX / width) * 5.6 + phase) * baseAmp;
           ctx.beginPath();
-          ctx.arc(markerX, markerY, 2.5, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${scheeleRgb}, ${opacity + 0.25})`;
+          ctx.arc(markerX, markerY, 3, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${scheeleRgb}, ${opacity + 0.35})`;
           ctx.fill();
         }
       }
