@@ -17,17 +17,33 @@
         <div class="blob blob-2"></div>
     </div>
 
-    <div class="theme-toggle-wrapper">
-        <button id="theme-toggle" title="Toggle Light/Dark Theme">🌙</button>
-    </div>
+    <!-- NEW: Sticky Navigation Bar -->
+    <nav class="glass-nav" id="navbar">
+        <div class="nav-brand font-serif gradient-text">UX Study</div>
+        <ul class="nav-links font-mono">
+            <li><a href="#hero" class="active">Start</a></li>
+            <li><a href="#dt-context">Approach</a></li>
+            <li><a href="#journey">Journey</a></li>
+            <li><a href="#persona">Persona</a></li>
+            <li><a href="#problem-statement">Climax</a></li>
+            <li><a href="himanshu/index.html" style="color: var(--chart-1); font-weight: 700;">🚀 Launch App</a></li>
+        </ul>
+        <div class="nav-actions">
+            <a href="himanshu/index.html" class="nav-cta-btn font-mono" title="Open Multi-Role System">Live App ➔</a>
+            <button id="theme-toggle" title="Toggle Light/Dark Theme">🌙</button>
+        </div>
+    </nav>
 
     <!-- 0. HERO SECTION -->
-    <header class="hero container split-layout mt-4 mb-4">
+    <header id="hero" class="hero container split-layout mt-4 mb-4">
         <div class="hero-content theme-card scroll-anim interactive-card" data-anim="slide-right">
             <h1 class="gradient-text" id="typewriter-title"></h1>
             <h2>Apartment Maintenance UX Case Study</h2>
             <p class="subtitle mt-2">Transforming the way apartment maintenance is reported, tracked, and held accountable through transparent design.</p>
-            <div class="badge">Dynamic Design-Thinking Case Study</div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 1rem;">
+                <div class="badge">Dynamic Design-Thinking Case Study</div>
+                <a href="himanshu/index.html" class="hero-cta-btn font-mono">🚀 Open Multi-Role Dashboards &amp; DB →</a>
+            </div>
         </div>
         
         <div class="hero-visual theme-card scroll-anim interactive-card" data-anim="slide-left">
@@ -38,7 +54,7 @@
 
     <main class="container">
 
-        <!-- 1. THE APPROACH (Design Thinking moved to top) -->
+        <!-- 1. THE APPROACH (Design Thinking) -->
         <section id="dt-context" class="scroll-anim" data-anim="fade-up">
             <h2 class="section-title"><span>01</span> The Approach</h2>
             <p class="mb-4 subtitle">Before jumping to solutions, we must understand the people and define the real issue. This study applies two core <strong>Design Thinking</strong> phases.</p>
@@ -162,13 +178,21 @@
 
     <footer class="dt-footer">
         <div class="container scroll-anim" data-anim="fade-up">
-            <h3 class="font-serif gradient-text">Ready for Ideation</h3>
-            <p class="footer-intro mt-2">With empathy established and the problem defined, we are now ready to begin ideating solutions.</p>
+            <h3 class="font-serif gradient-text">Solution Implemented &amp; Live</h3>
+            <p class="footer-intro mt-2">With empathy established and the problem defined, the multi-role system prototype is now fully functional with role dashboards and persistent database.</p>
+            <div class="mt-4" style="margin-bottom: 2rem;">
+                <a href="himanshu/index.html" class="hero-cta-btn font-mono" style="display:inline-block; font-size:1.05rem; padding: 0.8rem 1.6rem;">
+                    🚀 Open Himanshu's Maintenance Dashboard &amp; Database System →
+                </a>
+            </div>
             <div class="footer-bottom">
                 <p>&copy; 2026 UX Design Thinking Project &middot; Fully Animated & Dynamic</p>
             </div>
         </div>
     </footer>
+
+    <!-- NEW: Back to Top Button -->
+    <button id="back-to-top" title="Go to top">↑</button>
 
     <script src="script.js"></script>
 </body>

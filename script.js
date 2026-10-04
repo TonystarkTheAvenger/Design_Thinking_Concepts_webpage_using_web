@@ -18,8 +18,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     updateThemeIcon();
 
+    // --- 2. STICKY NAV ACTIVE STATE --- //
+    const sections = document.querySelectorAll('section, header');
+    const navLinks = document.querySelectorAll('.nav-links a');
+    
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            if (scrollY >= (sectionTop - 200)) {
+                current = section.getAttribute('id');
+            }
+        });
 
-    // --- 2. DYNAMIC DATA RENDERING --- //
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === `#${current}`) {
+                link.classList.add('active');
+            }
+        });
+    });
+
+    // --- 3. BACK TO TOP BUTTON --- //
+    const backToTopBtn = document.getElementById('back-to-top');
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 500) {
+            backToTopBtn.classList.add('show');
+        } else {
+            backToTopBtn.classList.remove('show');
+        }
+    });
+
+    backToTopBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+
+    // --- 4. DYNAMIC DATA RENDERING --- //
     const personaNeeds = ['Clarity', 'Visibility', 'Ownership', 'Timely updates'];
     
     const snapshotData = [
@@ -88,60 +126,57 @@ document.addEventListener('DOMContentLoaded', () => {
     `).join('');
 
 
-    // --- 3. FULLY ANIMATED DYNAMICS --- //
+    // --- 5. FULLY ANIMATED DYNAMICS --- //
 
-    // 3.1 Typewriter Effect for Hero Title
+    // 5.1 Typewriter Effect for Hero Title
     const titleElement = document.getElementById('typewriter-title');
     const textToType = "Fixing the Fixes";
     let typeIndex = 0;
     
-    // Add blinking cursor
     titleElement.innerHTML = `<span class="cursor"></span>`;
     
     function typeWriter() {
         if (typeIndex < textToType.length) {
-            // Insert character right before the cursor
             const textNode = document.createTextNode(textToType.charAt(typeIndex));
             titleElement.insertBefore(textNode, titleElement.querySelector('.cursor'));
             typeIndex++;
-            setTimeout(typeWriter, 80 + Math.random() * 50); // Natural typing speed
+            setTimeout(typeWriter, 80 + Math.random() * 50); 
         } else {
-            // Typing finished, remove cursor after a few seconds or keep it blinking
             setTimeout(() => {
                 const cursor = titleElement.querySelector('.cursor');
                 if(cursor) cursor.style.display = 'none';
             }, 3000);
         }
     }
-    // Start typing slightly after page load
     setTimeout(typeWriter, 500);
 
-    // 3.2 Dynamic 3D Tilt Effect on Cards
-    const interactiveCards = document.querySelectorAll('.interactive-card');
-    interactiveCards.forEach(card => {
-        card.addEventListener('mousemove', (e) => {
-            const rect = card.getBoundingClientRect();
-            const x = e.clientX - rect.left; // x position within the element.
-            const y = e.clientY - rect.top;  // y position within the element.
-            
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-            
-            // Calculate rotation (max 6 degrees for subtlety)
-            const rotateX = ((y - centerY) / centerY) * -6;
-            const rotateY = ((x - centerX) / centerX) * 6;
-            
-            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
-            card.style.transition = 'transform 0.1s ease-out';
-        });
+    // 5.2 Dynamic 3D Tilt Effect on Cards (Pointer fine only to prevent mobile glitches)
+    if (window.matchMedia("(pointer: fine)").matches) {
+        const interactiveCards = document.querySelectorAll('.interactive-card');
+        interactiveCards.forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left; 
+                const y = e.clientY - rect.top;  
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = ((y - centerY) / centerY) * -6;
+                const rotateY = ((x - centerX) / centerX) * 6;
+                
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+                card.style.transition = 'transform 0.1s ease-out';
+            });
 
-        card.addEventListener('mouseleave', () => {
-            card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
-            card.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1)';
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+                card.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1)';
+            });
         });
-    });
+    }
 
-    // 3.3 Dynamic ASCII Animation
+    // 5.3 Dynamic ASCII Animation
     const asciiContainer = document.getElementById('ascii-anim');
     const asciiFrames = [];
     const width = 36;
@@ -174,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // --- 4. ADVANCED INTERSECTION OBSERVER --- //
+    // --- 6. ADVANCED INTERSECTION OBSERVER --- //
     const observerOptions = {
         root: null,
         rootMargin: '0px',
@@ -202,5 +237,5 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollObserver.observe(el);
     });
 
-    console.log("Full dynamic animations, 3D tilt effects, and storytelling layout initialized.");
+    console.log("Navigation, animations, and UI polish successfully loaded.");
 });

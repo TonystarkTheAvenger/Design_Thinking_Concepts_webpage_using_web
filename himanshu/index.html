@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apartment Maintenance Hub — Multi-Role Dashboard</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Ambient Background -->
+    <div id="ambient-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <header class="app-header">
+        <div class="header-left">
+            <a href="../index.html" class="back-link font-mono" title="Back to Case Study">← Case Study</a>
+            <div class="brand">
+                <span class="brand-title font-serif gradient-text">Fixing the Fixes</span>
+                <span class="brand-badge">Multi-Role Hub</span>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <!-- Database Status Indicator -->
+            <div id="db-status" class="db-pill" title="Click to view database info">
+                <span class="status-dot"></span>
+                <span id="db-status-text">Checking DB...</span>
+            </div>
+
+            <!-- Theme Toggle -->
+            <button id="theme-toggle" class="icon-btn" title="Toggle Theme">🌙</button>
+        </div>
+    </header>
+
+    <main class="app-container">
+        <!-- Role Switcher Panel -->
+        <section class="role-selector-bar theme-card">
+            <div class="role-label-group">
+                <span class="role-title font-serif">Select Persona Role:</span>
+                <p class="role-desc">Switch perspectives instantly to experience how transparent design solves maintenance friction for each stakeholder.</p>
+            </div>
+
+            <div class="role-tabs">
+                <button class="role-tab active" data-role="resident">
+                    <span class="role-icon">🏠</span>
+                    <div class="role-meta">
+                        <strong>Resident</strong>
+                        <small>Aarav Mehta (Unit 402)</small>
+                    </div>
+                </button>
+
+                <button class="role-tab" data-role="technician">
+                    <span class="role-icon">🔧</span>
+                    <div class="role-meta">
+                        <strong>Technician</strong>
+                        <small>Suresh Patil (Plumbing Staff)</small>
+                    </div>
+                </button>
+
+                <button class="role-tab" data-role="manager">
+                    <span class="role-icon">🏢</span>
+                    <div class="role-meta">
+                        <strong>Property Manager</strong>
+                        <small>Priya Sharma (Admin)</small>
+                    </div>
+                </button>
+            </div>
+        </section>
+
+        <!-- Active Role Badge Bar -->
+        <section class="active-profile-strip">
+            <div class="active-user-info">
+                <div class="avatar" id="current-user-avatar">AM</div>
+                <div>
+                    <h3 id="current-user-name">Aarav Mehta</h3>
+                    <p id="current-user-details" class="font-mono text-muted">Resident &middot; Unit 402 &middot; +91 98765 43210</p>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <button id="btn-new-ticket" class="btn btn-primary">
+                    <span>+</span> Report Maintenance Issue
+                </button>
+                <button id="btn-export-db" class="btn btn-secondary font-mono">
+                    💾 Export Database
+                </button>
+                <button id="btn-reset-db" class="btn btn-ghost font-mono" title="Reset to initial seed data">
+                    ↺ Reset DB
+                </button>
+            </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- 1. RESIDENT VIEW                               -->
+        <!-- ============================================== -->
+        <section id="resident-dashboard" class="role-section active-section">
+            <div class="section-headline">
+                <div>
+                    <h2>Resident Maintenance Tracker</h2>
+                    <p class="text-muted">Real-time visibility into your reported issues. No chasing staff, no lost messages.</p>
+                </div>
+            </div>
+
+            <!-- Active Requests Grid -->
+            <div class="sub-heading mt-4">
+                <h3>My Active Requests (<span id="resident-active-count">0</span>)</h3>
+            </div>
+            <div id="resident-active-tickets" class="tickets-grid">
+                <!-- Rendered dynamically -->
+            </div>
+
+            <!-- Past Resolved Requests -->
+            <div class="sub-heading mt-6">
+                <h3>Resolved &amp; Past Requests (<span id="resident-past-count">0</span>)</h3>
+            </div>
+            <div id="resident-past-tickets" class="tickets-grid">
+                <!-- Rendered dynamically -->
+            </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- 2. TECHNICIAN VIEW                             -->
+        <!-- ============================================== -->
+        <section id="technician-dashboard" class="role-section">
+            <div class="section-headline">
+                <div>
+                    <h2>Technician Work Order Queue</h2>
+                    <p class="text-muted">Clear assignment orders, location details, parts tracking, and instant resolution logging.</p>
+                </div>
+                <div class="filter-pills">
+                    <button class="pill-btn active" data-tech-filter="all">All Jobs</button>
+                    <button class="pill-btn" data-tech-filter="assigned">Assigned</button>
+                    <button class="pill-btn" data-tech-filter="in_progress">In Progress</button>
+                    <button class="pill-btn" data-tech-filter="resolved">Completed</button>
+                </div>
+            </div>
+
+            <div id="technician-tickets" class="tickets-grid mt-4">
+                <!-- Rendered dynamically -->
+            </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- 3. MANAGER / ADMIN VIEW                        -->
+        <!-- ============================================== -->
+        <section id="manager-dashboard" class="role-section">
+            <!-- Metric KPI Cards -->
+            <div class="stats-grid">
+                <div class="stat-card border-accent-1">
+                    <span class="stat-label">Total Requests</span>
+                    <span class="stat-value" id="kpi-total">0</span>
+                    <span class="stat-note font-mono">Logged across community</span>
+                </div>
+                <div class="stat-card border-accent-2">
+                    <span class="stat-label">Open / Unassigned</span>
+                    <span class="stat-value text-warning" id="kpi-open">0</span>
+                    <span class="stat-note font-mono">Requires immediate allocation</span>
+                </div>
+                <div class="stat-card border-accent-3">
+                    <span class="stat-label">In Progress</span>
+                    <span class="stat-value text-info" id="kpi-active">0</span>
+                    <span class="stat-note font-mono">Currently with technicians</span>
+                </div>
+                <div class="stat-card border-accent-4">
+                    <span class="stat-label">Resolved</span>
+                    <span class="stat-value text-success" id="kpi-resolved">0</span>
+                    <span class="stat-note font-mono">Customer satisfaction verified</span>
+                </div>
+                <div class="stat-card border-accent-danger">
+                    <span class="stat-label">Emergency Alerts</span>
+                    <span class="stat-value text-danger" id="kpi-emergency">0</span>
+                    <span class="stat-note font-mono">Critical priority flags</span>
+                </div>
+            </div>
+
+            <!-- Management Controls & Filters -->
+            <div class="management-bar theme-card mt-4">
+                <div class="search-box">
+                    <input type="text" id="admin-search-input" placeholder="Search by ticket #, title, unit or resident...">
+                </div>
+
+                <div class="filter-controls">
+                    <select id="admin-filter-category" class="select-input font-mono">
+                        <option value="">All Categories</option>
+                        <option value="Plumbing">Plumbing</option>
+                        <option value="Electrical">Electrical</option>
+                        <option value="HVAC">HVAC</option>
+                        <option value="Carpentry">Carpentry</option>
+                        <option value="Appliance">Appliance</option>
+                        <option value="General">General</option>
+                    </select>
+
+                    <select id="admin-filter-priority" class="select-input font-mono">
+                        <option value="">All Priorities</option>
+                        <option value="Emergency">🚨 Emergency</option>
+                        <option value="High">⚠️ High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+
+                    <select id="admin-filter-status" class="select-input font-mono">
+                        <option value="">All Statuses</option>
+                        <option value="Open">Open</option>
+                        <option value="Assigned">Assigned</option>
+                        <option value="In_Progress">In Progress</option>
+                        <option value="Resolved">Resolved</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Master Table -->
+            <div class="table-container theme-card mt-3">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Ticket</th>
+                            <th>Issue &amp; Category</th>
+                            <th>Unit</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Assigned Staff</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-tickets-tbody">
+                        <!-- Rendered dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- ============================================== -->
+    <!-- MODALS                                         -->
+    <!-- ============================================== -->
+
+    <!-- Modal: Raise New Ticket -->
+    <div id="modal-new-ticket" class="modal-backdrop">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h3>Report Maintenance Issue</h3>
+                <button class="modal-close" data-close="modal-new-ticket">&times;</button>
+            </div>
+            <form id="form-new-ticket" class="modal-body">
+                <div class="form-group">
+                    <label for="ticket-title">Issue Title *</label>
+                    <input type="text" id="ticket-title" required placeholder="e.g. Master Bedroom AC Leaking Water">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ticket-category">Category *</label>
+                        <select id="ticket-category" required>
+                            <option value="Plumbing">Plumbing</option>
+                            <option value="Electrical">Electrical</option>
+                            <option value="HVAC">HVAC</option>
+                            <option value="Carpentry">Carpentry</option>
+                            <option value="Appliance">Appliance</option>
+                            <option value="General">General</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ticket-priority">Priority *</label>
+                        <select id="ticket-priority" required>
+                            <option value="Low">Low (Convenience)</option>
+                            <option value="Medium" selected>Medium (Standard)</option>
+                            <option value="High">High (Impacting Routine)</option>
+                            <option value="Emergency">🚨 Emergency (Damage / Safety)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ticket-unit">Unit / Flat *</label>
+                        <input type="text" id="ticket-unit" value="Unit 402" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="ticket-reporter">Reporting Resident</label>
+                        <input type="text" id="ticket-reporter" value="Aarav Mehta" readonly class="input-readonly">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="ticket-description">Detailed Description *</label>
+                    <textarea id="ticket-description" rows="4" required placeholder="Explain where the problem is located, how long it has been occurring, and any specific access instructions..."></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-ghost" data-close="modal-new-ticket">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: View Details & Communication Log -->
+    <div id="modal-ticket-detail" class="modal-backdrop">
+        <div class="modal-window modal-lg">
+            <div class="modal-header">
+                <div>
+                    <span id="detail-ticket-num" class="font-mono text-muted">TKT-1001</span>
+                    <h3 id="detail-ticket-title">Ticket Details</h3>
+                </div>
+                <button class="modal-close" data-close="modal-ticket-detail">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-grid">
+                    <div class="detail-main">
+                        <div class="detail-pills-row">
+                            <span id="detail-category" class="tag">Category</span>
+                            <span id="detail-priority" class="badge">Priority</span>
+                            <span id="detail-status" class="badge">Status</span>
+                        </div>
+                        <p id="detail-description" class="mt-3 detail-desc"></p>
+
+                        <div class="meta-box mt-3">
+                            <div><strong>Unit:</strong> <span id="detail-unit"></span></div>
+                            <div><strong>Reported By:</strong> <span id="detail-reporter"></span></div>
+                            <div><strong>Assigned To:</strong> <span id="detail-assigned"></span></div>
+                            <div><strong>Created At:</strong> <span id="detail-created"></span></div>
+                        </div>
+
+                        <!-- Technician Work Notes Section -->
+                        <div id="detail-tech-notes-box" class="tech-notes-card mt-3">
+                            <h4>Technician Maintenance Notes</h4>
+                            <p id="detail-tech-notes" class="text-muted">No repair notes added yet.</p>
+                            <p class="mt-1"><strong>Parts Used:</strong> <span id="detail-parts-used" class="font-mono">None</span></p>
+                        </div>
+
+                        <!-- Resident Rating Section -->
+                        <div id="detail-feedback-box" class="feedback-card mt-3">
+                            <h4>Resident Feedback &amp; Verification</h4>
+                            <div id="detail-rating-display"></div>
+                            <p id="detail-feedback-text" class="text-muted mt-1"></p>
+                        </div>
+                    </div>
+
+                    <!-- Activity Log Trail -->
+                    <div class="detail-sidebar">
+                        <h4>Audit Trail &amp; Updates</h4>
+                        <div id="detail-activity-timeline" class="activity-timeline">
+                            <!-- Rendered dynamically -->
+                        </div>
+
+                        <div class="add-note-box mt-3">
+                            <input type="text" id="new-log-input" placeholder="Add an update note...">
+                            <button id="btn-add-log" class="btn btn-sm btn-primary">Post Update</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-close="modal-ticket-detail">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Assign Technician (Manager) -->
+    <div id="modal-assign" class="modal-backdrop">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h3>Assign Technician</h3>
+                <button class="modal-close" data-close="modal-assign">&times;</button>
+            </div>
+            <form id="form-assign" class="modal-body">
+                <input type="hidden" id="assign-ticket-id">
+                <p class="mb-3">Select qualified staff member to assign to <strong id="assign-ticket-label"></strong>:</p>
+
+                <div class="form-group">
+                    <label for="assign-tech-select">Available Technicians</label>
+                    <select id="assign-tech-select" required>
+                        <option value="4">Rajesh Kumar — Electrical &amp; HVAC</option>
+                        <option value="5">Suresh Patil — Plumbing &amp; Sanitization</option>
+                        <option value="6">Vikram Singh — Carpentry &amp; General</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="assign-note">Assignment Instruction / SLA</label>
+                    <input type="text" id="assign-note" placeholder="e.g. Inspect water line before 2:00 PM">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-ghost" data-close="modal-assign">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Confirm Assignment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Technician Log Work -->
+    <div id="modal-tech-work" class="modal-backdrop">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h3>Log Maintenance Work</h3>
+                <button class="modal-close" data-close="modal-tech-work">&times;</button>
+            </div>
+            <form id="form-tech-work" class="modal-body">
+                <input type="hidden" id="tech-work-ticket-id">
+                <div class="form-group">
+                    <label for="tech-work-status">Update Job Status *</label>
+                    <select id="tech-work-status" required>
+                        <option value="In_Progress">In Progress (Diagnosing / Working)</option>
+                        <option value="Resolved">Resolved (Work Completed)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="tech-work-notes">Diagnostic &amp; Repair Notes *</label>
+                    <textarea id="tech-work-notes" rows="3" required placeholder="What was identified and repaired?"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="tech-work-parts">Replacement Parts Used</label>
+                    <input type="text" id="tech-work-parts" placeholder="e.g. 1x 16A Circuit Breaker, Teflon Tape">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-ghost" data-close="modal-tech-work">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Job Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Resident Feedback -->
+    <div id="modal-feedback" class="modal-backdrop">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h3>Rate Completed Resolution</h3>
+                <button class="modal-close" data-close="modal-feedback">&times;</button>
+            </div>
+            <form id="form-feedback" class="modal-body">
+                <input type="hidden" id="feedback-ticket-id">
+                <p class="mb-3">How satisfied are you with the resolution of <strong id="feedback-ticket-label"></strong>?</p>
+
+                <div class="form-group">
+                    <label>Rating (1 to 5 Stars) *</label>
+                    <div class="star-rating" id="star-rating-picker">
+                        <span data-star="1">★</span>
+                        <span data-star="2">★</span>
+                        <span data-star="3">★</span>
+                        <span data-star="4">★</span>
+                        <span data-star="5" class="active">★</span>
+                    </div>
+                    <input type="hidden" id="feedback-rating-val" value="5">
+                </div>
+
+                <div class="form-group">
+                    <label for="feedback-comments">Feedback Comments</label>
+                    <textarea id="feedback-comments" rows="3" placeholder="Share your experience (was the issue fixed cleanly and on time?)..."></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-ghost" data-close="modal-feedback">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit Rating</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="db.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
