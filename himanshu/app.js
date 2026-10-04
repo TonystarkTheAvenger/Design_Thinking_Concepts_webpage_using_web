@@ -1,699 +1,855 @@
 /**
- * Apartment Maintenance System — Core Application Logic
- * Role-based views (Resident, Technician, Manager)
- * Backed by DB layer (SQLite or LocalStorage fallback)
+ * FixFlow — Apartment Maintenance OS
+ * Multi-Role Dashboard with Dual-Mode Database Support (SQLite / LocalStorage)
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // --- 1. STATE MANAGEMENT --- //
-    const state = {
-        currentRole: 'resident', // 'resident' | 'technician' | 'manager'
-        currentUser: null,
-        users: [],
-        tickets: [],
-        stats: {},
-        activeTicketDetail: null,
-        techFilter: 'all',
-        adminSearch: '',
-        adminCategory: '',
-        adminPriority: '',
-        adminStatus: ''
-    };
+  // --- 1. APPLICATION STATE --- //
+  const state = {
+    currentRole: 'resident', // 'resident' | 'staff' | 'manager'
+    currentView: 'dashboard', // 'dashboard' | 'tickets' | 'activity'
+    currentUser: null,
+    users: [],
+    tickets: [],
+    stats: {},
+    activeTicketId: null,
+    listFilter: 'all',
+    searchQuery: ''
+  };
 
-    // --- 2. THEME SETUP --- //
-    const themeToggleBtn = document.getElementById('theme-toggle');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const savedTheme = localStorage.getItem('theme') || (prefersDark ? 'dark' : 'light');
+  // --- 2. THEME CONFIGURATION --- //
+  const themeToggleBtn = document.getElementById('theme-toggle');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const savedTheme = localStorage.getItem('theme') || (prefersDark ? 'dark' : 'light');
 
-    if (savedTheme === 'dark') {
-        document.body.classList.add('dark');
-        themeToggleBtn.textContent = '☀️';
-    } else {
-        document.body.classList.remove('dark');
-        themeToggleBtn.textContent = '🌙';
-    }
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark');
+    if (themeToggleBtn) themeToggleBtn.textContent = '☀️';
+  } else {
+    document.body.classList.remove('dark');
+    if (themeToggleBtn) themeToggleBtn.textContent = '🌙';
+  }
 
+  if (themeToggleBtn) {
     themeToggleBtn.addEventListener('click', () => {
-        const isDark = document.body.classList.toggle('dark');
-        themeToggleBtn.textContent = isDark ? '☀️' : '🌙';
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      const isDark = document.body.classList.toggle('dark');
+      themeToggleBtn.textContent = isDark ? '☀️' : '🌙';
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
     });
+  }
 
-    // --- 3. TOAST NOTIFICATIONS --- //
-    function showToast(message, type = 'info') {
-        const container = document.getElementById('toast-container');
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.innerHTML = `<span>🔔</span> <span>${message}</span>`;
-        container.appendChild(toast);
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateY(10px)';
-            setTimeout(() => toast.remove(), 300);
-        }, 3200);
+  // --- 3. TOAST NOTIFICATION SYSTEM --- //
+  function showToast(title, message = '') {
+    const toast = document.getElementById('toast');
+    const toastTitle = document.getElementById('toastTitle');
+    const toastText = document.getElementById('toastText');
+    if (!toast) return;
+
+    toastTitle.textContent = title;
+    toastText.textContent = message;
+    toast.classList.add('show');
+
+    setTimeout(() => {
+      toast.classList.remove('show');
+    }, 3200);
+  }
+
+  // --- 4. DATABASE INITIALIZATION --- //
+  const dbStatusEl = document.getElementById('db-status');
+  const dbStatusTextEl = document.getElementById('db-status-text');
+
+  async function initDatabase() {
+    const { mode, isApiConnected } = await DB.init();
+    if (dbStatusEl && dbStatusTextEl) {
+      if (isApiConnected) {
+        dbStatusEl.className = 'db-pill sqlite';
+        dbStatusTextEl.textContent = 'SQLite (Port 8000)';
+        dbStatusEl.title = 'Connected directly to Python SQLite backend (server.py)';
+      } else {
+        dbStatusEl.className = 'db-pill localstorage';
+        dbStatusTextEl.textContent = 'Local Database';
+        dbStatusEl.title = 'Running on client-side persistent storage. Start server.py for SQLite backend.';
+      }
+    }
+  }
+  await initDatabase();
+
+  // Load registered users
+  state.users = await DB.getUsers();
+
+  const ROLE_MAP = {
+    resident: state.users.find(u => u.role === 'resident') || { id: 1, name: "Aarav Mehta", unit: "Unit 402", phone: "+91 98765 43210" },
+    staff: state.users.find(u => u.role === 'technician') || { id: 5, name: "Suresh Patil", specialty: "Plumbing Specialist", phone: "+91 98765 22222" },
+    manager: state.users.find(u => u.role === 'manager') || { id: 7, name: "Priya Sharma", specialty: "Facilities Director", phone: "+91 98765 99999" }
+  };
+  state.currentUser = ROLE_MAP[state.currentRole];
+
+  // --- 5. DATA SYNC & VIEW RENDERING --- //
+  async function reloadData() {
+    state.tickets = await DB.getTickets();
+    state.stats = await DB.getStats();
+
+    updateProfileUI();
+    renderStats();
+    renderAttentionList();
+    renderFeaturedUpdate();
+    renderTicketsView();
+    renderActivityView();
+  }
+
+  // Update profile labels in sidebar & topbar
+  function updateProfileUI() {
+    const user = state.currentUser;
+    const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+    document.getElementById('sidebarAvatar').textContent = initials;
+    document.getElementById('topAvatar').textContent = initials;
+    document.getElementById('sidebarUserName').textContent = user.name;
+
+    const roleLabel = state.currentRole === 'resident' 
+      ? `${user.unit || 'Unit 402'} · Resident`
+      : state.currentRole === 'staff'
+      ? `${user.specialty || 'Technician'} · Staff`
+      : `Admin Office · Manager`;
+
+    document.getElementById('sidebarUserRole').textContent = roleLabel;
+
+    // Greeting & Eyebrow
+    const greetingEl = document.getElementById('greeting');
+    const subtleEl = document.getElementById('heroSubtle');
+    const navTicketsLabel = document.getElementById('navTicketsLabel');
+
+    if (state.currentRole === 'resident') {
+      greetingEl.textContent = `Good afternoon, ${user.name.split(' ')[0]}.`;
+      subtleEl.textContent = `Report it once. Track it all the way to fixed.`;
+      navTicketsLabel.textContent = `My Requests`;
+    } else if (state.currentRole === 'staff') {
+      greetingEl.textContent = `Welcome back, ${user.name.split(' ')[0]}.`;
+      subtleEl.textContent = `Work order queue: Diagnose, log parts, and complete repairs.`;
+      navTicketsLabel.textContent = `Assigned Jobs`;
+    } else {
+      greetingEl.textContent = `Welcome, ${user.name.split(' ')[0]}.`;
+      subtleEl.textContent = `Community oversight: Real-time SLAs, assignments, and audit trails.`;
+      navTicketsLabel.textContent = `All Requests`;
     }
 
-    // --- 4. DATABASE INITIALIZATION & STATUS --- //
-    const dbStatusEl = document.getElementById('db-status');
-    const dbStatusTextEl = document.getElementById('db-status-text');
+    // Active count on nav
+    const activeCount = state.tickets.filter(t => t.status !== 'Resolved' && t.status !== 'Closed').length;
+    document.getElementById('navCount').textContent = activeCount;
+  }
 
-    async function initDatabaseStatus() {
-        const { mode, isApiConnected } = await DB.init();
-        if (isApiConnected) {
-            dbStatusEl.className = 'db-pill sqlite';
-            dbStatusTextEl.textContent = 'SQLite Database (Port 8000)';
-            dbStatusEl.title = 'Connected directly to Python SQLite backend (server.py)';
-        } else {
-            dbStatusEl.className = 'db-pill localstorage';
-            dbStatusTextEl.textContent = 'Local Database (Offline Mode)';
-            dbStatusEl.title = 'Running on client-side persistent storage. Start server.py for SQLite backend.';
-        }
+  // Render Stat KPI Cards
+  function renderStats() {
+    const relevantTickets = getRoleScopedTickets();
+    const active = relevantTickets.filter(t => t.status === 'Open' || t.status === 'Assigned').length;
+    const progress = relevantTickets.filter(t => t.status === 'In_Progress').length;
+    const resolved = relevantTickets.filter(t => t.status === 'Resolved' || t.status === 'Closed').length;
+
+    document.getElementById('statActive').textContent = active;
+    document.getElementById('statProgress').textContent = progress;
+    document.getElementById('statResolved').textContent = resolved;
+
+    // Dynamic next technician visit
+    const activeWithTech = relevantTickets.find(t => t.status === 'In_Progress' || t.status === 'Assigned');
+    if (activeWithTech) {
+      document.getElementById('statNextAction').textContent = `Today · 5:30 PM`;
+      document.getElementById('statNextActionSub').textContent = `${activeWithTech.category} · ${activeWithTech.ticket_number}`;
+    } else {
+      document.getElementById('statNextAction').textContent = `All clear`;
+      document.getElementById('statNextActionSub').textContent = `No pending visits`;
     }
-    await initDatabaseStatus();
+  }
 
-    // Load initial users
-    state.users = await DB.getUsers();
+  // Category Icon Helper
+  function getCategoryIcon(cat) {
+    switch (cat) {
+      case 'Plumbing': return '💧';
+      case 'Electrical': return '⚡';
+      case 'HVAC': return '❄️';
+      case 'Carpentry': return '🔨';
+      case 'Appliance': return '🔌';
+      default: return '🛠️';
+    }
+  }
 
-    // Role profile configs
-    const ROLE_PROFILES = {
-        resident: state.users.find(u => u.role === 'resident') || { id: 1, name: "Aarav Mehta", unit: "Unit 402", phone: "+91 98765 43210" },
-        technician: state.users.find(u => u.role === 'technician') || { id: 5, name: "Suresh Patil", specialty: "Plumbing & Sanitization", phone: "+91 98765 22222" },
-        manager: state.users.find(u => u.role === 'manager') || { id: 7, name: "Priya Sharma", specialty: "Facilities Management", phone: "+91 98765 99999" }
+  function getRoleScopedTickets() {
+    if (state.currentRole === 'resident') {
+      return state.tickets.filter(t => t.created_by_user_id === state.currentUser.id || t.unit === state.currentUser.unit);
+    } else if (state.currentRole === 'staff') {
+      return state.tickets.filter(t => t.assigned_to_user_id === state.currentUser.id || t.status === 'Open');
+    }
+    return state.tickets;
+  }
+
+  // Render Dashboard Left Panel: Requests in Motion
+  function renderAttentionList() {
+    const container = document.getElementById('attentionList');
+    const relevant = getRoleScopedTickets().filter(t => t.status !== 'Resolved' && t.status !== 'Closed');
+
+    if (relevant.length === 0) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 28px 12px; color: var(--muted);">
+          <strong style="display:block; font-size:14px; color:var(--foreground);">No requests in motion 🎉</strong>
+          <span style="font-size:12px;">All reported maintenance tasks are currently resolved.</span>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = relevant.slice(0, 4).map(t => {
+      const statusClass = t.status === 'In_Progress' ? 'progress' : t.status === 'Assigned' ? 'open' : 'open';
+      const statusText = t.status === 'In_Progress' ? 'In progress' : t.status === 'Assigned' ? 'Assigned' : 'Open';
+      const priorityTag = t.priority === 'Emergency' ? '<span class="priority-tag emergency">🚨 Emergency</span>' : (t.priority === 'High' ? '<span class="priority-tag high">⚠️ High</span>' : '');
+
+      return `
+        <div class="ticket-item" onclick="window.openDetailModal(${t.id})">
+          <div class="ticket-icon">${getCategoryIcon(t.category)}</div>
+          <div class="ticket-main">
+            <strong>${t.title} ${priorityTag}</strong>
+            <span>${t.unit} · ${t.category}</span>
+            <small>${t.assigned_to_name ? `Assigned: ${t.assigned_to_name}` : 'Awaiting assignment'}</small>
+          </div>
+          <div style="text-align: right;">
+            <span class="status ${statusClass}">${statusText}</span>
+            <span style="display:block; font-size:10px; color:var(--muted); font-family:var(--font-mono); margin-top:4px;">${t.ticket_number}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Render Dashboard Right Panel: Live Visibility
+  function renderFeaturedUpdate() {
+    const featured = state.tickets.find(t => t.status === 'In_Progress') || state.tickets[0];
+    if (!featured) return;
+
+    document.getElementById('featuredIcon').textContent = getCategoryIcon(featured.category);
+    document.getElementById('featuredTitle').textContent = featured.title;
+    document.getElementById('featuredTime').textContent = featured.updated_at ? featured.updated_at.split(' ')[1] : 'Today';
+    document.getElementById('featuredAssignee').innerHTML = featured.assigned_to_name 
+      ? `Assigned to <b>${featured.assigned_to_name} · ${featured.category}</b>`
+      : `Status: <b>Awaiting technician assignment</b>`;
+
+    const progressWidth = featured.status === 'Resolved' ? '100%' : featured.status === 'In_Progress' ? '70%' : featured.status === 'Assigned' ? '40%' : '15%';
+    document.getElementById('featuredProgress').style.width = progressWidth;
+    document.getElementById('featuredStatusText').textContent = featured.technician_notes 
+      ? `Fix note: ${featured.technician_notes}`
+      : `Unit ${featured.unit} · Priority: ${featured.priority}`;
+
+    // Mini Stepper
+    const step = featured.status === 'Open' ? 1 : featured.status === 'Assigned' ? 2 : featured.status === 'In_Progress' ? 3 : 4;
+    document.getElementById('featuredMiniTimeline').innerHTML = `
+      <div class="timeline-step ${step >= 1 ? (step === 1 ? 'current' : 'done') : ''}">
+        <span>${step > 1 ? '✓' : '1'}</span>
+        <div><strong>Reported</strong><small>${featured.created_at.split(' ')[1] || 'Morning'}</small></div>
+      </div>
+      <div class="timeline-step ${step >= 2 ? (step === 2 ? 'current' : 'done') : ''}">
+        <span>${step > 2 ? '✓' : '2'}</span>
+        <div><strong>Assigned</strong><small>${featured.assigned_to_name || 'Staff'}</small></div>
+      </div>
+      <div class="timeline-step ${step >= 3 ? (step === 3 ? 'current' : 'done') : ''}">
+        <span>${step > 3 ? '✓' : '3'}</span>
+        <div><strong>In progress</strong><small>Diagnosing &amp; parts</small></div>
+      </div>
+      <div class="timeline-step ${step >= 4 ? 'done' : ''}">
+        <span>${step >= 4 ? '✓' : '4'}</span>
+        <div><strong>Resolved</strong><small>${featured.resolved_at ? 'Completed' : 'Pending'}</small></div>
+      </div>
+    `;
+  }
+
+  // Render Request Center (View 2)
+  function renderTicketsView() {
+    const container = document.getElementById('fullTicketList');
+    let list = getRoleScopedTickets();
+
+    // Filter selection
+    if (state.listFilter === 'open') {
+      list = list.filter(t => t.status === 'Open' || t.status === 'Assigned');
+    } else if (state.listFilter === 'progress') {
+      list = list.filter(t => t.status === 'In_Progress');
+    } else if (state.listFilter === 'resolved') {
+      list = list.filter(t => t.status === 'Resolved' || t.status === 'Closed');
+    }
+
+    // Search query
+    if (state.searchQuery) {
+      const q = state.searchQuery.toLowerCase();
+      list = list.filter(t => 
+        t.title.toLowerCase().includes(q) ||
+        t.ticket_number.toLowerCase().includes(q) ||
+        t.unit.toLowerCase().includes(q) ||
+        t.category.toLowerCase().includes(q) ||
+        t.description.toLowerCase().includes(q)
+      );
+    }
+
+    if (list.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center; padding:40px 14px; color:var(--muted);">
+          <strong>No requests found</strong>
+          <p style="font-size:12px; margin-top:4px;">Try searching for another term or changing the filter.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = list.map(t => {
+      const statusClass = t.status === 'In_Progress' ? 'progress' : t.status === 'Resolved' ? 'resolved' : 'open';
+      const statusText = t.status === 'In_Progress' ? 'In progress' : t.status === 'Resolved' ? 'Resolved' : (t.status === 'Assigned' ? 'Assigned' : 'Open');
+      const stars = t.rating ? '★'.repeat(t.rating) : '';
+
+      return `
+        <div class="ticket-item" onclick="window.openDetailModal(${t.id})">
+          <div class="ticket-icon">${getCategoryIcon(t.category)}</div>
+          <div class="ticket-main">
+            <strong>${t.title}</strong>
+            <span>${t.unit} · ${t.category} · Priority: ${t.priority}</span>
+            <small>${t.assigned_to_name ? `Technician: ${t.assigned_to_name}` : 'Unassigned'} ${stars ? `· Rating: <b style="color:#f59e0b">${stars}</b>` : ''}</small>
+          </div>
+          <div class="assigned" style="font-size:11px; color:var(--muted); font-family:var(--font-mono);">
+            ${t.ticket_number}
+          </div>
+          <div>
+            <span class="status ${statusClass}">${statusText}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Render Activity Trail (View 3)
+  async function renderActivityView() {
+    const container = document.getElementById('activityList');
+    // Gather logs from tickets
+    let allLogs = [];
+    for (const t of state.tickets) {
+      const full = await DB.getTicketById(t.id);
+      if (full && full.logs) {
+        allLogs.push(...full.logs);
+      }
+    }
+    allLogs.sort((a, b) => b.id - a.id);
+
+    if (allLogs.length === 0) {
+      container.innerHTML = `<div style="text-align:center; padding:30px; color:var(--muted);">No activity recorded yet.</div>`;
+      return;
+    }
+
+    container.innerHTML = allLogs.slice(0, 15).map(l => `
+      <div class="activity-entry">
+        <div class="activity-dot">✓</div>
+        <div style="flex:1;">
+          <strong>${l.user_name} · ${l.action}</strong>
+          <p>${l.note || 'Updated ticket status'}</p>
+          <time>${l.created_at}</time>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // --- 6. NAVIGATION & TAB SWITCHING --- //
+  document.querySelectorAll('.nav-item[data-view]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item[data-view]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const viewId = btn.getAttribute('data-view');
+      switchView(viewId);
+    });
+  });
+
+  document.querySelectorAll('[data-go="tickets"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item[data-view]').forEach(b => b.classList.remove('active'));
+      document.querySelector('.nav-item[data-view="tickets"]').classList.add('active');
+      switchView('tickets');
+    });
+  });
+
+  // Stat card filter quick-switch
+  document.querySelectorAll('.stat-card[data-filter]').forEach(card => {
+    card.addEventListener('click', () => {
+      const filter = card.getAttribute('data-filter');
+      state.listFilter = filter === 'active' ? 'open' : filter;
+      document.querySelectorAll('.nav-item[data-view]').forEach(b => b.classList.remove('active'));
+      document.querySelector('.nav-item[data-view="tickets"]').classList.add('active');
+      document.querySelectorAll('.filter').forEach(f => {
+        f.classList.toggle('active', f.getAttribute('data-list-filter') === state.listFilter);
+      });
+      switchView('tickets');
+      renderTicketsView();
+    });
+  });
+
+  function switchView(viewId) {
+    state.currentView = viewId;
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(`view-${viewId}`).classList.add('active');
+
+    const pageTitleMap = {
+      dashboard: 'Dashboard',
+      tickets: 'Maintenance Requests',
+      activity: 'Activity Audit Trail'
     };
-    state.currentUser = ROLE_PROFILES[state.currentRole];
+    document.getElementById('pageTitle').textContent = pageTitleMap[viewId] || 'Dashboard';
+  }
 
-    // --- 5. REFRESH DATA & VIEWS --- //
-    async function loadData() {
-        state.tickets = await DB.getTickets();
-        state.stats = await DB.getStats();
-        renderActiveProfile();
-        renderCurrentView();
-    }
+  // --- 7. ROLE SWITCHER --- //
+  const roleSelect = document.getElementById('roleSelect');
+  roleSelect.addEventListener('change', (e) => {
+    const role = e.target.value;
+    state.currentRole = role;
+    state.currentUser = ROLE_MAP[role];
+    showToast(`Switched view to ${e.target.options[e.target.selectedIndex].text}`);
+    reloadData();
+  });
 
-    function renderActiveProfile() {
-        const u = state.currentUser;
-        const avatarEl = document.getElementById('current-user-avatar');
-        const nameEl = document.getElementById('current-user-name');
-        const detailsEl = document.getElementById('current-user-details');
-        const newTicketBtn = document.getElementById('btn-new-ticket');
+  // --- 8. FILTERS & SEARCH --- //
+  document.querySelectorAll('.filter[data-list-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter[data-list-filter]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.listFilter = btn.getAttribute('data-list-filter');
+      renderTicketsView();
+    });
+  });
 
-        const initials = u.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-        avatarEl.textContent = initials;
-        nameEl.textContent = u.name;
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      state.searchQuery = e.target.value.trim();
+      renderTicketsView();
+    });
+  }
 
-        if (state.currentRole === 'resident') {
-            detailsEl.textContent = `Resident · ${u.unit} · ${u.phone}`;
-            newTicketBtn.style.display = 'inline-flex';
-        } else if (state.currentRole === 'technician') {
-            detailsEl.textContent = `Technician · ${u.specialty || 'General Service'} · ${u.phone}`;
-            newTicketBtn.style.display = 'none';
-        } else {
-            detailsEl.textContent = `Property Manager · Admin Office · ${u.phone}`;
-            newTicketBtn.style.display = 'inline-flex';
-        }
-    }
+  // --- 9. MODALS SYSTEM --- //
+  const modalBackdrop = document.getElementById('modalBackdrop');
+  const modalClose = document.getElementById('modalClose');
+  const modalContent = document.getElementById('modalContent');
 
-    function initCardTilt() {
-        if (window.matchMedia("(pointer: fine)").matches) {
-            const interactiveCards = document.querySelectorAll('.interactive-card, .theme-card');
-            interactiveCards.forEach(card => {
-                card.onmousemove = (e) => {
-                    const rect = card.getBoundingClientRect();
-                    const x = e.clientX - rect.left; 
-                    const y = e.clientY - rect.top;  
-                    const centerX = rect.width / 2;
-                    const centerY = rect.height / 2;
-                    const rotateX = ((y - centerY) / centerY) * -5;
-                    const rotateY = ((x - centerX) / centerX) * 5;
-                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.01, 1.01, 1.01)`;
-                    card.style.transition = 'transform 0.1s ease-out';
-                };
-                card.onmouseleave = () => {
-                    card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
-                    card.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
-                };
-            });
-        }
-    }
+  function openModal(html) {
+    modalContent.innerHTML = html;
+    modalBackdrop.hidden = false;
+  }
 
-    function renderCurrentView() {
-        // Toggle view containers
-        document.querySelectorAll('.role-section').forEach(sec => sec.classList.remove('active-section'));
+  function closeModal() {
+    modalBackdrop.hidden = true;
+    modalContent.innerHTML = '';
+  }
 
-        if (state.currentRole === 'resident') {
-            document.getElementById('resident-dashboard').classList.add('active-section');
-            renderResidentView();
-        } else if (state.currentRole === 'technician') {
-            document.getElementById('technician-dashboard').classList.add('active-section');
-            renderTechnicianView();
-        } else {
-            document.getElementById('manager-dashboard').classList.add('active-section');
-            renderManagerView();
-        }
-        initCardTilt();
-    }
+  modalClose.addEventListener('click', closeModal);
+  modalBackdrop.addEventListener('click', (e) => {
+    if (e.target === modalBackdrop) closeModal();
+  });
 
-    // Helper: badge markup
-    function getPriorityBadge(priority) {
-        const pLower = (priority || 'medium').toLowerCase();
-        let label = priority;
-        if (priority === 'Emergency') label = '🚨 Emergency';
-        return `<span class="badge badge-${pLower}">${label}</span>`;
-    }
+  // Report Issue Modal
+  function showReportModal() {
+    const user = state.currentUser;
+    const defaultUnit = user.unit || 'Unit 402';
 
-    function getStatusBadge(status) {
-        const sClean = (status || 'Open').replace('_', ' ');
-        const sClass = (status || 'Open').toLowerCase();
-        return `<span class="badge badge-status-${sClass}">${sClean}</span>`;
-    }
+    const html = `
+      <div class="modal-inner">
+        <h2>Report a maintenance issue</h2>
+        <p class="modal-sub">Tell us what needs fixing. We'll assign the right staff and keep you updated.</p>
 
-    // --- 6. RENDER RESIDENT VIEW --- //
-    function renderResidentView() {
-        const myTickets = state.tickets.filter(t => t.created_by_user_id === state.currentUser.id || t.unit === state.currentUser.unit);
-        const activeTickets = myTickets.filter(t => t.status !== 'Resolved' && t.status !== 'Closed');
-        const pastTickets = myTickets.filter(t => t.status === 'Resolved' || t.status === 'Closed');
-
-        document.getElementById('resident-active-count').textContent = activeTickets.length;
-        document.getElementById('resident-past-count').textContent = pastTickets.length;
-
-        const activeContainer = document.getElementById('resident-active-tickets');
-        if (activeTickets.length === 0) {
-            activeContainer.innerHTML = `
-                <div class="theme-card text-muted" style="grid-column: 1/-1; text-align: center; padding: 3rem;">
-                    <h3>No Active Issues! 🎉</h3>
-                    <p class="mt-1">All your maintenance requests have been resolved.</p>
-                </div>
-            `;
-        } else {
-            activeContainer.innerHTML = activeTickets.map(t => {
-                const step = t.status === 'Open' ? 1 : t.status === 'Assigned' ? 2 : t.status === 'In_Progress' ? 3 : 4;
-                return `
-                    <div class="ticket-card interactive-card">
-                        <div class="ticket-top">
-                            <div>
-                                <span class="ticket-num">${t.ticket_number}</span>
-                                <h4 class="ticket-title">${t.title}</h4>
-                            </div>
-                            ${getPriorityBadge(t.priority)}
-                        </div>
-
-                        <div class="ticket-unit-row font-mono">
-                            <span class="tag">${t.category}</span>
-                            <span>${t.unit}</span>
-                        </div>
-
-                        <p class="ticket-desc">${t.description}</p>
-
-                        <!-- Visual Progress Stepper -->
-                        <div class="progress-stepper">
-                            <div class="step-item ${step >= 1 ? (step === 1 ? 'active' : 'completed') : ''}">
-                                <div class="step-circle">${step > 1 ? '✓' : '1'}</div>
-                                <span>Reported</span>
-                            </div>
-                            <div class="step-item ${step >= 2 ? (step === 2 ? 'active' : 'completed') : ''}">
-                                <div class="step-circle">${step > 2 ? '✓' : '2'}</div>
-                                <span>Assigned</span>
-                            </div>
-                            <div class="step-item ${step >= 3 ? (step === 3 ? 'active' : 'completed') : ''}">
-                                <div class="step-circle">${step > 3 ? '✓' : '3'}</div>
-                                <span>Working</span>
-                            </div>
-                            <div class="step-item ${step >= 4 ? 'completed' : ''}">
-                                <div class="step-circle">${step >= 4 ? '✓' : '4'}</div>
-                                <span>Resolved</span>
-                            </div>
-                        </div>
-
-                        <div class="ticket-footer">
-                            <div class="assignee-info">
-                                <strong>Staff:</strong>
-                                <span>${t.assigned_to_name ? `🔧 ${t.assigned_to_name}` : '<em class="text-muted">Awaiting assignment</em>'}</span>
-                            </div>
-                            <button class="btn btn-sm btn-secondary" onclick="window.viewTicketDetails(${t.id})">Details</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        const pastContainer = document.getElementById('resident-past-tickets');
-        if (pastTickets.length === 0) {
-            pastContainer.innerHTML = `
-                <div class="theme-card text-muted" style="grid-column: 1/-1; text-align: center; padding: 2rem;">
-                    <p>No past resolved requests found.</p>
-                </div>
-            `;
-        } else {
-            pastContainer.innerHTML = pastTickets.map(t => {
-                const stars = t.rating ? '★'.repeat(t.rating) + '☆'.repeat(5 - t.rating) : null;
-                return `
-                    <div class="ticket-card">
-                        <div class="ticket-top">
-                            <div>
-                                <span class="ticket-num">${t.ticket_number}</span>
-                                <h4 class="ticket-title">${t.title}</h4>
-                            </div>
-                            ${getStatusBadge(t.status)}
-                        </div>
-
-                        <div class="ticket-unit-row font-mono">
-                            <span class="tag">${t.category}</span>
-                            <span>Resolved on ${t.resolved_at ? t.resolved_at.split(' ')[0] : 'Completed'}</span>
-                        </div>
-
-                        <p class="ticket-desc">${t.description}</p>
-                        ${t.technician_notes ? `<p class="tech-notes-card mt-1 font-mono text-muted" style="font-size:0.8rem"><strong>Fix:</strong> ${t.technician_notes}</p>` : ''}
-
-                        <div class="ticket-footer">
-                            <div>
-                                ${stars ? `<span style="color:#ffb703; font-size:1.1rem">${stars}</span>` : `<button class="btn btn-sm btn-primary" onclick="window.openFeedbackModal(${t.id}, '${t.ticket_number}')">⭐ Rate Work</button>`}
-                            </div>
-                            <button class="btn btn-sm btn-secondary" onclick="window.viewTicketDetails(${t.id})">History</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-    }
-
-    // --- 7. RENDER TECHNICIAN VIEW --- //
-    function renderTechnicianView() {
-        const myJobs = state.tickets.filter(t => {
-            if (state.techFilter === 'assigned') return t.status === 'Assigned';
-            if (state.techFilter === 'in_progress') return t.status === 'In_Progress';
-            if (state.techFilter === 'resolved') return t.status === 'Resolved';
-            return true;
-        });
-
-        const container = document.getElementById('technician-tickets');
-        if (myJobs.length === 0) {
-            container.innerHTML = `
-                <div class="theme-card text-muted" style="grid-column: 1/-1; text-align: center; padding: 3rem;">
-                    <h3>No work orders match this filter.</h3>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = myJobs.map(t => `
-            <div class="ticket-card interactive-card">
-                <div class="ticket-top">
-                    <div>
-                        <span class="ticket-num">${t.ticket_number}</span>
-                        <h4 class="ticket-title">${t.title}</h4>
-                    </div>
-                    ${getPriorityBadge(t.priority)}
-                </div>
-
-                <div class="ticket-unit-row font-mono">
-                    <span class="tag">${t.category}</span>
-                    <strong>📍 ${t.unit}</strong>
-                </div>
-
-                <p class="ticket-desc">${t.description}</p>
-
-                <div class="meta-box" style="padding:0.6rem; font-size:0.8rem">
-                    <div><strong>Resident:</strong> ${t.created_by_name}</div>
-                    <div><strong>Status:</strong> ${getStatusBadge(t.status)}</div>
-                </div>
-
-                ${t.technician_notes ? `<div class="tech-notes-card font-mono" style="font-size:0.8rem"><strong>Work Log:</strong> ${t.technician_notes}</div>` : ''}
-
-                <div class="ticket-footer">
-                    <div style="display: flex; gap: 6px;">
-                        ${t.status === 'Assigned' ? `<button class="btn btn-sm btn-primary" onclick="window.quickStartJob(${t.id})">▶ Start Job</button>` : ''}
-                        ${t.status === 'In_Progress' ? `<button class="btn btn-sm btn-primary" onclick="window.openTechWorkModal(${t.id})">📝 Log &amp; Finish</button>` : ''}
-                        ${t.status === 'Resolved' ? `<span class="text-success font-mono" style="font-size:0.85rem">✓ Completed</span>` : ''}
-                    </div>
-                    <button class="btn btn-sm btn-secondary" onclick="window.viewTicketDetails(${t.id})">Log History</button>
-                </div>
+        <form id="newIssueForm">
+          <div class="form-grid">
+            <div class="field full">
+              <label for="modalTitle">Issue title *</label>
+              <input id="modalTitle" required placeholder="e.g. Master bathroom sink pipe leaking">
             </div>
-        `).join('');
-    }
 
-    // --- 8. RENDER MANAGER / ADMIN VIEW --- //
-    function renderManagerView() {
-        // KPI Updates
-        document.getElementById('kpi-total').textContent = state.stats.total || 0;
-        document.getElementById('kpi-open').textContent = state.stats.open || 0;
-        document.getElementById('kpi-active').textContent = state.stats.active || 0;
-        document.getElementById('kpi-resolved').textContent = state.stats.resolved || 0;
-        document.getElementById('kpi-emergency').textContent = state.stats.emergency || 0;
-
-        // Filter tickets
-        let filtered = state.tickets.filter(t => {
-            if (state.adminCategory && t.category !== state.adminCategory) return false;
-            if (state.adminPriority && t.priority !== state.adminPriority) return false;
-            if (state.adminStatus && t.status !== state.adminStatus) return false;
-            if (state.adminSearch) {
-                const q = state.adminSearch.toLowerCase();
-                const match = t.ticket_number.toLowerCase().includes(q) ||
-                              t.title.toLowerCase().includes(q) ||
-                              t.unit.toLowerCase().includes(q) ||
-                              t.created_by_name.toLowerCase().includes(q);
-                if (!match) return false;
-            }
-            return true;
-        });
-
-        const tbody = document.getElementById('admin-tickets-tbody');
-        if (filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:2rem" class="text-muted">No tickets match criteria.</td></tr>`;
-            return;
-        }
-
-        tbody.innerHTML = filtered.map(t => `
-            <tr>
-                <td class="font-mono"><strong>${t.ticket_number}</strong></td>
-                <td>
-                    <strong>${t.title}</strong>
-                    <div class="tag mt-1" style="display:inline-block">${t.category}</div>
-                </td>
-                <td class="font-mono"><strong>${t.unit}</strong></td>
-                <td>${getPriorityBadge(t.priority)}</td>
-                <td>${getStatusBadge(t.status)}</td>
-                <td>
-                    ${t.assigned_to_name ? `<span>🔧 ${t.assigned_to_name}</span>` : `<button class="btn btn-sm btn-secondary" onclick="window.openAssignModal(${t.id}, '${t.ticket_number}')">+ Assign</button>`}
-                </td>
-                <td class="font-mono text-muted" style="font-size:0.8rem">${t.created_at.split(' ')[0]}</td>
-                <td>
-                    <div style="display:flex; gap:6px;">
-                        <button class="btn btn-sm btn-secondary" onclick="window.viewTicketDetails(${t.id})">View</button>
-                        ${!t.assigned_to_name ? `<button class="btn btn-sm btn-primary" onclick="window.openAssignModal(${t.id}, '${t.ticket_number}')">Assign</button>` : ''}
-                    </div>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    // --- 9. MODAL HANDLERS --- //
-    function openModal(id) {
-        document.getElementById(id).classList.add('show');
-    }
-
-    function closeModal(id) {
-        document.getElementById(id).classList.remove('show');
-    }
-
-    document.querySelectorAll('[data-close]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const modalId = btn.getAttribute('data-close');
-            closeModal(modalId);
-        });
-    });
-
-    // Close on backdrop click
-    document.querySelectorAll('.modal-backdrop').forEach(modal => {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal(modal.id);
-        });
-    });
-
-    // --- 10. ROLE SWITCHING --- //
-    document.querySelectorAll('.role-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            const role = tab.getAttribute('data-role');
-            state.currentRole = role;
-            state.currentUser = ROLE_PROFILES[role];
-            renderActiveProfile();
-            renderCurrentView();
-            showToast(`Switched to ${tab.querySelector('strong').textContent} perspective.`);
-        });
-    });
-
-    // --- 11. TECHNICIAN PILL FILTERS --- //
-    document.querySelectorAll('[data-tech-filter]').forEach(pill => {
-        pill.addEventListener('click', () => {
-            document.querySelectorAll('[data-tech-filter]').forEach(p => p.classList.remove('active'));
-            pill.classList.add('active');
-            state.techFilter = pill.getAttribute('data-tech-filter');
-            renderTechnicianView();
-        });
-    });
-
-    // --- 12. ADMIN SEARCH & FILTERS --- //
-    document.getElementById('admin-search-input').addEventListener('input', (e) => {
-        state.adminSearch = e.target.value.trim();
-        renderManagerView();
-    });
-
-    document.getElementById('admin-filter-category').addEventListener('change', (e) => {
-        state.adminCategory = e.target.value;
-        renderManagerView();
-    });
-
-    document.getElementById('admin-filter-priority').addEventListener('change', (e) => {
-        state.adminPriority = e.target.value;
-        renderManagerView();
-    });
-
-    document.getElementById('admin-filter-status').addEventListener('change', (e) => {
-        state.adminStatus = e.target.value;
-        renderManagerView();
-    });
-
-    // --- 13. RAISE TICKET SUBMISSION --- //
-    document.getElementById('btn-new-ticket').addEventListener('click', () => {
-        // Preset default unit & reporter for current user
-        document.getElementById('ticket-unit').value = state.currentUser.unit || 'Unit 402';
-        document.getElementById('ticket-reporter').value = state.currentUser.name;
-        openModal('modal-new-ticket');
-    });
-
-    document.getElementById('form-new-ticket').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const title = document.getElementById('ticket-title').value.trim();
-        const category = document.getElementById('ticket-category').value;
-        const priority = document.getElementById('ticket-priority').value;
-        const unit = document.getElementById('ticket-unit').value.trim();
-        const description = document.getElementById('ticket-description').value.trim();
-
-        const created = await DB.createTicket({
-            title,
-            category,
-            priority,
-            unit,
-            description,
-            created_by_user_id: state.currentUser.id,
-            created_by_name: state.currentUser.name
-        });
-
-        closeModal('modal-new-ticket');
-        document.getElementById('form-new-ticket').reset();
-        await loadData();
-        showToast(`Ticket ${created.ticket_number} created successfully!`, 'success');
-    });
-
-    // --- 14. GLOBAL WINDOW ACTIONS --- //
-
-    // View Ticket Details & Logs
-    window.viewTicketDetails = async function (id) {
-        const ticket = await DB.getTicketById(id);
-        if (!ticket) return;
-        state.activeTicketDetail = ticket;
-
-        document.getElementById('detail-ticket-num').textContent = ticket.ticket_number;
-        document.getElementById('detail-ticket-title').textContent = ticket.title;
-        document.getElementById('detail-category').textContent = ticket.category;
-        document.getElementById('detail-priority').innerHTML = getPriorityBadge(ticket.priority);
-        document.getElementById('detail-status').innerHTML = getStatusBadge(ticket.status);
-        document.getElementById('detail-description').textContent = ticket.description;
-        document.getElementById('detail-unit').textContent = ticket.unit;
-        document.getElementById('detail-reporter').textContent = ticket.created_by_name;
-        document.getElementById('detail-assigned').textContent = ticket.assigned_to_name ? `🔧 ${ticket.assigned_to_name}` : 'Unassigned';
-        document.getElementById('detail-created').textContent = ticket.created_at;
-
-        // Tech notes
-        const techNotesBox = document.getElementById('detail-tech-notes');
-        const partsUsedBox = document.getElementById('detail-parts-used');
-        techNotesBox.textContent = ticket.technician_notes || 'No work notes logged yet.';
-        partsUsedBox.textContent = ticket.parts_used || 'None';
-
-        // Feedback
-        const feedbackBox = document.getElementById('detail-feedback-box');
-        if (ticket.rating) {
-            feedbackBox.style.display = 'block';
-            document.getElementById('detail-rating-display').innerHTML = '<span style="color:#ffb703; font-size:1.4rem">' + '★'.repeat(ticket.rating) + '☆'.repeat(5 - ticket.rating) + '</span>';
-            document.getElementById('detail-feedback-text').textContent = ticket.feedback ? `"${ticket.feedback}"` : 'No written feedback provided.';
-        } else {
-            feedbackBox.style.display = 'none';
-        }
-
-        // Timeline logs
-        renderActivityLogs(ticket.logs || []);
-        openModal('modal-ticket-detail');
-    };
-
-    function renderActivityLogs(logs) {
-        const timelineEl = document.getElementById('detail-activity-timeline');
-        if (logs.length === 0) {
-            timelineEl.innerHTML = `<p class="text-muted" style="font-size:0.8rem">No activity logged yet.</p>`;
-            return;
-        }
-        timelineEl.innerHTML = logs.map(l => `
-            <div class="activity-item">
-                <span class="activity-action">${l.action}</span>
-                <span class="activity-time">${l.created_at.split(' ')[1] || l.created_at}</span>
-                <div class="activity-note"><strong>${l.user_name}:</strong> ${l.note || ''}</div>
+            <div class="field">
+              <label for="modalCategory">Category *</label>
+              <select id="modalCategory" required>
+                <option value="Plumbing">💧 Plumbing</option>
+                <option value="Electrical">⚡ Electrical</option>
+                <option value="HVAC">❄️ HVAC / AC</option>
+                <option value="Carpentry">🔨 Carpentry</option>
+                <option value="Appliance">🔌 Appliance</option>
+                <option value="General">🛠️ General</option>
+              </select>
             </div>
-        `).join('');
-    }
 
-    // Add note to active ticket detail
-    document.getElementById('btn-add-log').addEventListener('click', async () => {
-        const input = document.getElementById('new-log-input');
-        const note = input.value.trim();
-        if (!note || !state.activeTicketDetail) return;
+            <div class="field">
+              <label for="modalUnit">Apartment / Unit *</label>
+              <input id="modalUnit" value="${defaultUnit}" required>
+            </div>
 
-        await DB.addLog(state.activeTicketDetail.id, {
-            user_name: state.currentUser.name,
-            action: `${state.currentUser.role.toUpperCase()} Update`,
-            note
-        });
+            <div class="field full">
+              <label>Priority level *</label>
+              <div class="priority-row">
+                <div class="priority-option">
+                  <input type="radio" name="priority" id="p1" value="Low">
+                  <label for="p1">Low</label>
+                </div>
+                <div class="priority-option">
+                  <input type="radio" name="priority" id="p2" value="Medium" checked>
+                  <label for="p2">Medium</label>
+                </div>
+                <div class="priority-option">
+                  <input type="radio" name="priority" id="p3" value="High">
+                  <label for="p3">High</label>
+                </div>
+                <div class="priority-option">
+                  <input type="radio" name="priority" id="p4" value="Emergency">
+                  <label for="p4" style="color:var(--destructive)">🚨 Emergency</label>
+                </div>
+              </div>
+            </div>
 
-        input.value = '';
-        const refreshed = await DB.getTicketById(state.activeTicketDetail.id);
-        state.activeTicketDetail = refreshed;
-        renderActivityLogs(refreshed.logs || []);
-        showToast('Update note added to ticket log.');
+            <div class="field full">
+              <label for="modalDesc">Detailed description *</label>
+              <textarea id="modalDesc" required placeholder="Describe the location, how long it has been occurring, and any access details..."></textarea>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="secondary-btn" onclick="document.getElementById('modalClose').click()">Cancel</button>
+            <button type="submit" class="primary-btn">Submit request</button>
+          </div>
+        </form>
+      </div>
+    `;
+
+    openModal(html);
+
+    document.getElementById('newIssueForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('modalTitle').value.trim();
+      const category = document.getElementById('modalCategory').value;
+      const unit = document.getElementById('modalUnit').value.trim();
+      const priority = document.querySelector('input[name="priority"]:checked').value;
+      const description = document.getElementById('modalDesc').value.trim();
+
+      const created = await DB.createTicket({
+        title,
+        category,
+        priority,
+        unit,
+        description,
+        created_by_user_id: user.id,
+        created_by_name: user.name
+      });
+
+      closeModal();
+      await reloadData();
+      showToast('Request submitted!', `Ticket #${created.ticket_number} created.`);
+    });
+  }
+
+  document.getElementById('reportBtn').addEventListener('click', showReportModal);
+  document.getElementById('reportBtn2').addEventListener('click', showReportModal);
+
+  // Detail Modal
+  window.openDetailModal = async function(ticketId) {
+    state.activeTicketId = ticketId;
+    const ticket = await DB.getTicketById(ticketId);
+    if (!ticket) return;
+
+    const step = ticket.status === 'Open' ? 1 : ticket.status === 'Assigned' ? 2 : ticket.status === 'In_Progress' ? 3 : 4;
+    const isStaffOrManager = state.currentRole === 'staff' || state.currentRole === 'manager';
+    const isResident = state.currentRole === 'resident';
+
+    const html = `
+      <div class="modal-inner">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-right:32px;">
+          <div>
+            <span style="font-size:11px; color:var(--muted); font-family:var(--font-mono);">${ticket.ticket_number}</span>
+            <h2>${ticket.title}</h2>
+          </div>
+          <span class="status ${ticket.status === 'In_Progress' ? 'progress' : ticket.status === 'Resolved' ? 'resolved' : 'open'}">
+            ${ticket.status.replace('_', ' ')}
+          </span>
+        </div>
+
+        <p class="modal-sub">${ticket.description}</p>
+
+        <div class="detail-grid">
+          <div class="detail-box">
+            <span>Location &amp; Reporter</span>
+            <strong>${ticket.unit} · ${ticket.created_by_name}</strong>
+          </div>
+          <div class="detail-box">
+            <span>Category &amp; Priority</span>
+            <strong>${ticket.category} · ${ticket.priority}</strong>
+          </div>
+          <div class="detail-box">
+            <span>Assigned Staff</span>
+            <strong>${ticket.assigned_to_name ? `🔧 ${ticket.assigned_to_name}` : 'Awaiting assignment'}</strong>
+          </div>
+          <div class="detail-box">
+            <span>Reported At</span>
+            <strong>${ticket.created_at}</strong>
+          </div>
+        </div>
+
+        ${ticket.technician_notes ? `
+          <div class="detail-box" style="margin-bottom:14px; border-left:3px solid var(--accent);">
+            <span>Technician Fix Log</span>
+            <p style="font-size:12px; margin:2px 0;">${ticket.technician_notes}</p>
+            ${ticket.parts_used ? `<small style="font-family:var(--font-mono); color:var(--muted)">Parts: ${ticket.parts_used}</small>` : ''}
+          </div>
+        ` : ''}
+
+        ${ticket.rating ? `
+          <div class="detail-box" style="margin-bottom:14px; border-left:3px solid var(--success);">
+            <span>Resident Feedback</span>
+            <div style="color:#f59e0b; font-size:16px;">${'★'.repeat(ticket.rating)}${'☆'.repeat(5 - ticket.rating)}</div>
+            <p style="font-size:12px; margin:2px 0;">"${ticket.feedback || 'Great job!'}"</p>
+          </div>
+        ` : ''}
+
+        <!-- Progress Steps -->
+        <div class="timeline-mini" style="padding:10px 0;">
+          <div class="timeline-step ${step >= 1 ? 'done' : ''}">
+            <span>✓</span><div><strong>Reported</strong><small>${ticket.created_at}</small></div>
+          </div>
+          <div class="timeline-step ${step >= 2 ? 'done' : ''}">
+            <span>${step >= 2 ? '✓' : '2'}</span><div><strong>Assigned</strong><small>${ticket.assigned_to_name || 'Staff'}</small></div>
+          </div>
+          <div class="timeline-step ${step >= 3 ? (step === 3 ? 'current' : 'done') : ''}">
+            <span>${step > 3 ? '✓' : '3'}</span><div><strong>In Progress</strong><small>Diagnosis &amp; repair</small></div>
+          </div>
+          <div class="timeline-step ${step >= 4 ? 'done' : ''}">
+            <span>${step >= 4 ? '✓' : '4'}</span><div><strong>Resolved</strong><small>${ticket.resolved_at || 'Pending'}</small></div>
+          </div>
+        </div>
+
+        <!-- Role Action Area -->
+        ${isStaffOrManager ? `
+          <div class="staff-controls">
+            <label>Staff &amp; Manager Controls</label>
+            <div class="inline">
+              ${ticket.status === 'Assigned' ? `
+                <button class="primary-btn" onclick="window.updateStatus(${ticket.id}, 'In_Progress')">▶ Start working</button>
+              ` : ''}
+              ${ticket.status === 'In_Progress' ? `
+                <button class="primary-btn" onclick="window.promptResolveModal(${ticket.id})">✓ Mark as resolved</button>
+              ` : ''}
+              ${state.currentRole === 'manager' && !ticket.assigned_to_name ? `
+                <button class="secondary-btn" onclick="window.promptAssignModal(${ticket.id})">+ Assign staff</button>
+              ` : ''}
+            </div>
+          </div>
+        ` : ''}
+
+        ${isResident && ticket.status === 'Resolved' && !ticket.rating ? `
+          <div class="staff-controls">
+            <label>Rate Resolution</label>
+            <button class="primary-btn" onclick="window.promptRatingModal(${ticket.id})">⭐ Rate technician's work</button>
+          </div>
+        ` : ''}
+
+        <!-- Comment / Activity Note -->
+        <div style="margin-top:20px; border-top:1px solid var(--line); padding-top:15px;">
+          <label style="font-size:11px; font-weight:700; display:block; margin-bottom:6px;">Add note to audit trail</label>
+          <div style="display:flex; gap:8px;">
+            <input id="detailNewNote" style="flex:1; border:1px solid var(--border); background:var(--background); border-radius:var(--radius); padding:8px 12px; font-size:12px;" placeholder="Add an update note...">
+            <button class="secondary-btn" onclick="window.postDetailNote(${ticket.id})">Post</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    openModal(html);
+  };
+
+  // Actions on Ticket
+  window.updateStatus = async function(ticketId, status) {
+    await DB.updateTicket(ticketId, {
+      status,
+      log_action: 'Status Updated',
+      log_user: state.currentUser.name,
+      log_note: `${state.currentUser.name} marked ticket as ${status.replace('_', ' ')}`
+    });
+    closeModal();
+    await reloadData();
+    showToast('Status updated', `Ticket marked as ${status.replace('_', ' ')}.`);
+  };
+
+  window.promptResolveModal = function(ticketId) {
+    const html = `
+      <div class="modal-inner">
+        <h2>Complete Repair</h2>
+        <p class="modal-sub">Log the diagnostic fix and any replacement parts used.</p>
+        <div class="field full" style="margin-bottom:12px;">
+          <label>Diagnostic &amp; Repair Summary *</label>
+          <textarea id="resolveNotes" placeholder="e.g. Cleared drain blockage and replaced gasket seal."></textarea>
+        </div>
+        <div class="field full" style="margin-bottom:16px;">
+          <label>Replacement Parts Used</label>
+          <input id="resolveParts" placeholder="e.g. 1x rubber O-ring, silicone tape">
+        </div>
+        <div class="modal-footer">
+          <button class="secondary-btn" onclick="window.openDetailModal(${ticketId})">Back</button>
+          <button class="primary-btn" onclick="window.submitResolve(${ticketId})">Confirm &amp; resolve</button>
+        </div>
+      </div>
+    `;
+    openModal(html);
+  };
+
+  window.submitResolve = async function(ticketId) {
+    const notes = document.getElementById('resolveNotes').value.trim() || 'Work completed.';
+    const parts = document.getElementById('resolveParts').value.trim() || 'None';
+
+    await DB.updateTicket(ticketId, {
+      status: 'Resolved',
+      technician_notes: notes,
+      parts_used: parts,
+      log_action: 'Work Completed',
+      log_user: state.currentUser.name,
+      log_note: `Resolved: ${notes} (Parts: ${parts})`
     });
 
-    // Assign Technician (Manager)
-    window.openAssignModal = function (ticketId, ticketNum) {
-        document.getElementById('assign-ticket-id').value = ticketId;
-        document.getElementById('assign-ticket-label').textContent = ticketNum;
-        openModal('modal-assign');
-    };
+    closeModal();
+    await reloadData();
+    showToast('Job marked as Resolved!', 'Resident will be notified to review.');
+  };
 
-    document.getElementById('form-assign').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const ticketId = document.getElementById('assign-ticket-id').value;
-        const techId = parseInt(document.getElementById('assign-tech-select').value);
-        const assignNote = document.getElementById('assign-note').value.trim();
+  window.promptAssignModal = function(ticketId) {
+    const html = `
+      <div class="modal-inner">
+        <h2>Assign Staff</h2>
+        <p class="modal-sub">Dispatch a technician for this request.</p>
+        <div class="field full" style="margin-bottom:16px;">
+          <label>Select Technician</label>
+          <select id="assignTechSelect">
+            <option value="5">Suresh Patil — Plumbing &amp; Sanitization</option>
+            <option value="4">Rajesh Kumar — Electrical &amp; HVAC</option>
+            <option value="6">Vikram Singh — Carpentry &amp; General</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button class="secondary-btn" onclick="window.openDetailModal(${ticketId})">Back</button>
+          <button class="primary-btn" onclick="window.submitAssign(${ticketId})">Assign</button>
+        </div>
+      </div>
+    `;
+    openModal(html);
+  };
 
-        const techUser = state.users.find(u => u.id === techId);
-        const techName = techUser ? techUser.name : 'Staff Technician';
+  window.submitAssign = async function(ticketId) {
+    const techId = parseInt(document.getElementById('assignTechSelect').value);
+    const techUser = state.users.find(u => u.id === techId) || { name: 'Staff Member' };
 
-        await DB.updateTicket(ticketId, {
-            status: 'Assigned',
-            assigned_to_user_id: techId,
-            assigned_to_name: techName,
-            log_action: 'Staff Assigned',
-            log_user: state.currentUser.name,
-            log_note: `Dispatched ${techName}. ${assignNote ? `Note: ${assignNote}` : ''}`
-        });
-
-        closeModal('modal-assign');
-        await loadData();
-        showToast(`Assigned to ${techName}.`, 'success');
+    await DB.updateTicket(ticketId, {
+      status: 'Assigned',
+      assigned_to_user_id: techId,
+      assigned_to_name: techUser.name,
+      log_action: 'Staff Assigned',
+      log_user: state.currentUser.name,
+      log_note: `Assigned to ${techUser.name}`
     });
 
-    // Quick Start Job (Technician)
-    window.quickStartJob = async function (ticketId) {
-        await DB.updateTicket(ticketId, {
-            status: 'In_Progress',
-            log_action: 'Job In Progress',
-            log_user: state.currentUser.name,
-            log_note: `${state.currentUser.name} arrived at unit and started work.`
-        });
-        await loadData();
-        showToast('Work order marked as In Progress.', 'info');
-    };
+    closeModal();
+    await reloadData();
+    showToast('Staff assigned', `Dispatched ${techUser.name}.`);
+  };
 
-    // Log Work & Complete (Technician)
-    window.openTechWorkModal = function (ticketId) {
-        document.getElementById('tech-work-ticket-id').value = ticketId;
-        openModal('modal-tech-work');
-    };
+  window.promptRatingModal = function(ticketId) {
+    const html = `
+      <div class="modal-inner">
+        <h2>Rate Work Quality</h2>
+        <p class="modal-sub">How was the maintenance resolution?</p>
+        <div class="field full" style="margin-bottom:14px;">
+          <label>Rating (1 to 5 Stars)</label>
+          <select id="ratingScoreSelect">
+            <option value="5">★★★★★ (5 Stars - Excellent)</option>
+            <option value="4">★★★★☆ (4 Stars - Good)</option>
+            <option value="3">★★★☆☆ (3 Stars - Average)</option>
+            <option value="2">★★☆☆☆ (2 Stars - Poor)</option>
+            <option value="1">★☆☆☆☆ (1 Star - Incomplete)</option>
+          </select>
+        </div>
+        <div class="field full" style="margin-bottom:16px;">
+          <label>Comments</label>
+          <textarea id="ratingComment" placeholder="Any comments on response time or quality..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="secondary-btn" onclick="window.openDetailModal(${ticketId})">Back</button>
+          <button class="primary-btn" onclick="window.submitRating(${ticketId})">Submit feedback</button>
+        </div>
+      </div>
+    `;
+    openModal(html);
+  };
 
-    document.getElementById('form-tech-work').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const ticketId = document.getElementById('tech-work-ticket-id').value;
-        const status = document.getElementById('tech-work-status').value;
-        const techNotes = document.getElementById('tech-work-notes').value.trim();
-        const partsUsed = document.getElementById('tech-work-parts').value.trim();
+  window.submitRating = async function(ticketId) {
+    const rating = parseInt(document.getElementById('ratingScoreSelect').value);
+    const feedback = document.getElementById('ratingComment').value.trim();
 
-        await DB.updateTicket(ticketId, {
-            status,
-            technician_notes: techNotes,
-            parts_used: partsUsed,
-            log_action: status === 'Resolved' ? 'Work Completed' : 'Work Log Updated',
-            log_user: state.currentUser.name,
-            log_note: `${techNotes} ${partsUsed ? `(Parts: ${partsUsed})` : ''}`
-        });
-
-        closeModal('modal-tech-work');
-        document.getElementById('form-tech-work').reset();
-        await loadData();
-        showToast(`Job record saved (${status}).`, 'success');
+    await DB.updateTicket(ticketId, {
+      rating,
+      feedback,
+      log_action: 'Resident Rated Work',
+      log_user: state.currentUser.name,
+      log_note: `Resident gave ${rating} stars: "${feedback || 'No comments'}"`
     });
 
-    // Resident Feedback & Star Rating
-    window.openFeedbackModal = function (ticketId, ticketNum) {
-        document.getElementById('feedback-ticket-id').value = ticketId;
-        document.getElementById('feedback-ticket-label').textContent = ticketNum;
-        openModal('modal-feedback');
-    };
+    closeModal();
+    await reloadData();
+    showToast('Thank you!', 'Your rating has been saved.');
+  };
 
-    const starSpans = document.querySelectorAll('#star-rating-picker span');
-    starSpans.forEach(star => {
-        star.addEventListener('click', () => {
-            const val = parseInt(star.getAttribute('data-star'));
-            document.getElementById('feedback-rating-val').value = val;
-            starSpans.forEach(s => {
-                const sVal = parseInt(s.getAttribute('data-star'));
-                if (sVal <= val) {
-                    s.classList.add('active');
-                } else {
-                    s.classList.remove('active');
-                }
-            });
-        });
+  window.postDetailNote = async function(ticketId) {
+    const note = document.getElementById('detailNewNote').value.trim();
+    if (!note) return;
+
+    await DB.addLog(ticketId, {
+      user_name: state.currentUser.name,
+      action: `${state.currentRole.toUpperCase()} Note`,
+      note
     });
 
-    document.getElementById('form-feedback').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const ticketId = document.getElementById('feedback-ticket-id').value;
-        const rating = parseInt(document.getElementById('feedback-rating-val').value);
-        const feedback = document.getElementById('feedback-comments').value.trim();
+    showToast('Note added', 'Saved to the audit trail.');
+    window.openDetailModal(ticketId);
+  };
 
-        await DB.updateTicket(ticketId, {
-            rating,
-            feedback,
-            log_action: 'Resident Rated Work',
-            log_user: state.currentUser.name,
-            log_note: `Rated ${rating} stars: "${feedback || 'No comments'}"`
-        });
-
-        closeModal('modal-feedback');
-        document.getElementById('form-feedback').reset();
-        await loadData();
-        showToast('Thank you! Your feedback has been recorded.', 'success');
+  // --- 10. DATABASE EXPORT & RESET --- //
+  const btnExport = document.getElementById('btn-export-db');
+  if (btnExport) {
+    btnExport.addEventListener('click', async () => {
+      const data = await DB.exportJSON();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `maintenance_db_export_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Database Exported', 'Downloaded backup JSON.');
     });
+  }
 
-    // --- 15. EXPORT & RESET DB --- //
-    document.getElementById('btn-export-db').addEventListener('click', async () => {
-        const data = await DB.exportJSON();
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `maintenance_db_export_${new Date().toISOString().slice(0, 10)}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('Database exported as JSON.', 'info');
+  const btnReset = document.getElementById('btn-reset-db');
+  if (btnReset) {
+    btnReset.addEventListener('click', async () => {
+      if (confirm('Reset database to clean initial sample state?')) {
+        await DB.resetData();
+        await reloadData();
+        showToast('Database reset', 'Restored to clean demo data.');
+      }
     });
+  }
 
-    document.getElementById('btn-reset-db').addEventListener('click', async () => {
-        if (confirm("Reset database to initial sample data?")) {
-            await DB.resetData();
-            await loadData();
-            showToast('Database reset to initial sample state.', 'info');
-        }
+  // --- 11. MOBILE SIDEBAR DRAWER --- //
+  const sidebar = document.getElementById('sidebar');
+  const openSidebar = document.getElementById('openSidebar');
+  const mobileMenuClose = document.getElementById('mobileMenuClose');
+
+  if (openSidebar) {
+    openSidebar.addEventListener('click', () => {
+      sidebar.classList.add('open');
     });
+  }
+  if (mobileMenuClose) {
+    mobileMenuClose.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+    });
+  }
 
-    // Initial load
-    await loadData();
+  // Initial load
+  await reloadData();
 });
