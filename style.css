@@ -117,13 +117,8 @@ body {
     perspective: 1000px;
 }
 
-/* Ambient Background Blobs */
+/* Ambient Background - clean, no color tint wash */
 #ambient-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; overflow: hidden; pointer-events: none; }
-.blob { position: absolute; filter: blur(100px); border-radius: 50%; opacity: 0.15; animation: floatBlob 25s infinite alternate ease-in-out; }
-.blob-1 { width: 50vw; height: 50vw; background: var(--chart-1); top: -20vh; left: -10vw; }
-.blob-2 { width: 60vw; height: 60vw; background: var(--primary); bottom: -30vh; right: -20vw; animation-delay: -12s; }
-.dark .blob { opacity: 0.08; }
-@keyframes floatBlob { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(15vw, 10vh) scale(1.2); } }
 
 h1, h2, h3, h4, h5, h6, .font-serif { font-family: var(--font-serif); font-weight: 600; }
 .font-mono { font-family: var(--font-mono); }
@@ -215,7 +210,8 @@ h1, h2, h3, h4, h5, h6, .font-serif { font-family: var(--font-serif); font-weigh
 .ascii-art { color: var(--chart-1); font-size: 1.1rem; line-height: 1.2; white-space: pre; text-align: left; font-weight: 600; text-shadow: 0 0 5px rgba(242, 106, 75, 0.2); }
 
 .subtitle { color: var(--muted-foreground); font-size: 1.15rem; max-width: 800px; line-height: 1.7; }
-.badge { display: inline-block; background-color: var(--secondary); color: var(--chart-1); padding: 0.4rem 1rem; border-radius: 20px; font-weight: 600; margin-top: 1.5rem; border: 1px solid var(--border); align-self: flex-start; }
+.badge { display: inline-block; background-color: #FFFFFF !important; color: var(--chart-1); padding: 0.4rem 1rem; border-radius: 20px; font-weight: 700; margin-top: 1.5rem; border: 1px solid rgba(0,0,0,0.12); box-shadow: 0 2px 6px rgba(0,0,0,0.04); align-self: flex-start; }
+.dark .badge { background-color: #FFFFFF !important; color: #2e6600 !important; }
 
 /* Theme Cards with 3D Tilt Effect */
 .theme-card {
@@ -254,7 +250,8 @@ section { padding: 4rem 0; }
 
 /* Persona */
 .persona-quote { font-size: 1.3rem; font-style: italic; color: var(--chart-1); border-left: 4px solid var(--chart-1); padding-left: 1.5rem; margin: 1.5rem 0; }
-.tags span { display: inline-block; background: var(--secondary); padding: 0.5rem 1rem; border-radius: 20px; margin: 0 0.5rem 0.5rem 0; border: 1px solid var(--border); color: var(--primary); font-family: var(--font-sans); font-size: 0.9rem; font-weight: 500; transition: all 0.3s ease;}
+.tags span { display: inline-block; background: #FFFFFF !important; padding: 0.5rem 1rem; border-radius: 20px; margin: 0 0.5rem 0.5rem 0; border: 1px solid rgba(0,0,0,0.12); box-shadow: 0 2px 4px rgba(0,0,0,0.03); color: var(--primary); font-family: var(--font-sans); font-size: 0.9rem; font-weight: 500; transition: all 0.3s ease;}
+.dark .tags span { background: #FFFFFF !important; color: #111111 !important; border-color: rgba(255,255,255,0.2); }
 .tags span:hover { background: var(--chart-1); color: var(--background); border-color: var(--chart-1); transform: scale(1.05); }
 
 /* Progress Bars */
