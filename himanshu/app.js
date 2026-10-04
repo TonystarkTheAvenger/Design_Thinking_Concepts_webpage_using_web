@@ -896,7 +896,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   initButtonAnimations();
 
-  // --- 14. INTERACTIVE BACKGROUND (CANVAS + MOUSE INTERACTION + SHOCKWAVE) --- //
+  // --- 14. INTERACTIVE BACKGROUND (ARCHITECTURAL CAD BLUEPRINT MATRIX & WAVE DYNAMICS) --- //
   function initInteractiveBackground() {
     const canvas = document.getElementById('bg-canvas');
     if (!canvas) return;
@@ -916,7 +916,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     resize();
     window.addEventListener('resize', resize);
 
-    const mouse = { x: width / 2, y: height / 2, active: false, radius: 150 };
+    const mouse = { x: width / 2, y: height / 2, active: false, radius: 140 };
     window.addEventListener('pointermove', (e) => {
       mouse.x = e.clientX;
       mouse.y = e.clientY;
@@ -936,182 +936,207 @@ document.addEventListener('DOMContentLoaded', async () => {
       mouse.active = false;
     });
 
-    // Smooth cursor glow follower
-    const cursorGlow = document.getElementById('cursor-glow');
-    let glowX = width / 2, glowY = height / 2;
-    function updateGlow() {
-      if (mouse.active) {
-        glowX += (mouse.x - glowX) * 0.1;
-        glowY += (mouse.y - glowY) * 0.1;
-        if (cursorGlow) {
-          cursorGlow.style.opacity = '0.35';
-          cursorGlow.style.transform = `translate3d(${glowX - 110}px, ${glowY - 110}px, 0)`;
-        }
-      } else if (cursorGlow) {
-        cursorGlow.style.opacity = '0.05';
-      }
-      requestAnimationFrame(updateGlow);
-    }
-    updateGlow();
-
-    // Shockwaves on click
-    const shockwaves = [];
+    // Waves created by clicks
+    const waves = [];
     window.addEventListener('click', (e) => {
-      shockwaves.push({
+      waves.push({
         x: e.clientX,
         y: e.clientY,
-        radius: 6,
-        maxRadius: 160,
-        opacity: 0.6,
-        speed: 4.5
+        radius: 4,
+        maxRadius: Math.max(width, height) * 0.85,
+        speed: 6.5,
+        amplitude: 16,
+        decay: 0.982
       });
-
-      // Emit 6 micro-burst sparks
-      for (let k = 0; k < 6; k++) {
-        const angle = (Math.PI * 2 / 6) * k + (Math.random() - 0.5) * 0.5;
-        const spd = Math.random() * 2 + 1.2;
-        sparks.push({
-          x: e.clientX,
-          y: e.clientY,
-          vx: Math.cos(angle) * spd,
-          vy: Math.sin(angle) * spd,
-          life: 1.0,
-          size: Math.random() * 2 + 1.2
-        });
-      }
     });
 
-    // Particles setup
-    const particleCount = Math.min(Math.floor((width * height) / 20000), 55);
-    const particles = [];
-    const sparks = [];
+    // Subtle drifting architectural blueprint guide rings
+    const rings = [
+      { xRatio: 0.22, yRatio: 0.32, radius: 130, angle: 0, speed: 0.0012 },
+      { xRatio: 0.78, yRatio: 0.62, radius: 200, angle: Math.PI / 3, speed: -0.0009 },
+      { xRatio: 0.52, yRatio: 0.82, radius: 160, angle: Math.PI, speed: 0.0007 }
+    ];
 
-    for (let i = 0; i < particleCount; i++) {
-      particles.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        originVx: (Math.random() - 0.5) * 0.45,
-        originVy: (Math.random() - 0.5) * 0.45,
-        vx: (Math.random() - 0.5) * 0.45,
-        vy: (Math.random() - 0.5) * 0.45,
-        size: Math.random() * 1.8 + 1.4
-      });
-    }
+    const SPACING = 38; // Grid spacing in px
 
-    function renderParticles() {
+    function renderMatrix() {
       ctx.clearRect(0, 0, width, height);
       const isDark = document.body.classList.contains('dark');
-      const baseRgb = isDark ? '93, 178, 0' : '71, 136, 0'; // Scheele's Green RGB
+      // Scheele's Green RGB: 71, 136, 0 (light) | 93, 178, 0 (dark)
+      const scheeleRgb = isDark ? '93, 178, 0' : '71, 136, 0';
+      const defaultDotColor = isDark ? 'rgba(235, 235, 235, 0.12)' : 'rgba(30, 30, 30, 0.1)';
+      const crosshairColor = isDark ? 'rgba(235, 235, 235, 0.22)' : 'rgba(30, 30, 30, 0.18)';
 
-      // 1. Process click shockwaves
-      for (let s = shockwaves.length - 1; s >= 0; s--) {
-        const wave = shockwaves[s];
-        wave.radius += wave.speed;
-        wave.opacity -= 0.016;
+      // 1. Draw subtle architectural drafting guideline rings
+      for (const ring of rings) {
+        ring.angle += ring.speed;
+        const rx = ring.xRatio * width;
+        const ry = ring.yRatio * height;
 
-        if (wave.opacity <= 0 || wave.radius >= wave.maxRadius) {
-          shockwaves.splice(s, 1);
-          continue;
-        }
-
+        ctx.save();
         ctx.beginPath();
-        ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(${baseRgb}, ${wave.opacity * 0.5})`;
-        ctx.lineWidth = 1.6;
+        ctx.arc(rx, ry, ring.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = isDark ? 'rgba(93, 178, 0, 0.06)' : 'rgba(71, 136, 0, 0.05)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 12]);
         ctx.stroke();
 
-        // Push nearby particles outward
-        for (let p of particles) {
-          const dx = p.x - wave.x;
-          const dy = p.y - wave.y;
-          const dist = Math.hypot(dx, dy);
-          if (Math.abs(dist - wave.radius) < 25 && dist > 0) {
-            p.vx += (dx / dist) * 0.8;
-            p.vy += (dy / dist) * 0.8;
-          }
-        }
+        // Small cross-tick on circumference
+        const tx = rx + Math.cos(ring.angle) * ring.radius;
+        const ty = ry + Math.sin(ring.angle) * ring.radius;
+        ctx.beginPath();
+        ctx.arc(tx, ty, 2, 0, Math.PI * 2);
+        ctx.fillStyle = isDark ? 'rgba(93, 178, 0, 0.25)' : 'rgba(71, 136, 0, 0.2)';
+        ctx.fill();
+        ctx.restore();
       }
 
-      // 2. Render micro sparks
-      for (let k = sparks.length - 1; k >= 0; k--) {
-        const spk = sparks[k];
-        spk.x += spk.vx;
-        spk.y += spk.vy;
-        spk.vx *= 0.94;
-        spk.vy *= 0.94;
-        spk.life -= 0.025;
+      // 2. Update waves
+      for (let w = waves.length - 1; w >= 0; w--) {
+        const wave = waves[w];
+        wave.radius += wave.speed;
+        wave.amplitude *= wave.decay;
 
-        if (spk.life <= 0) {
-          sparks.splice(k, 1);
+        if (wave.amplitude < 0.25 || wave.radius >= wave.maxRadius) {
+          waves.splice(w, 1);
           continue;
         }
 
+        // Draw subtle expanding shockwave guide arc
         ctx.beginPath();
-        ctx.arc(spk.x, spk.y, spk.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${baseRgb}, ${spk.life * 0.8})`;
-        ctx.fill();
+        ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${scheeleRgb}, ${Math.min(0.35, (wave.amplitude / 16) * 0.35)})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
       }
 
-      // 3. Render and update floating particles
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
+      // 3. Render Matrix Grid Points & Crosshairs with Magnetic & Wave Deformation
+      const cols = Math.ceil(width / SPACING) + 1;
+      const rows = Math.ceil(height / SPACING) + 1;
 
-        // Friction back to baseline drift
-        p.vx = p.vx * 0.97 + p.originVx * 0.03;
-        p.vy = p.vy * 0.97 + p.originVy * 0.03;
+      for (let c = 0; c < cols; c++) {
+        for (let r = 0; r < rows; r++) {
+          const bx = c * SPACING;
+          const by = r * SPACING;
+          let px = bx;
+          let py = by;
+          let intensity = 0;
 
-        // Bounce gently at viewport edges
-        if (p.x < 0) { p.x = 0; p.vx *= -1; }
-        else if (p.x > width) { p.x = width; p.vx *= -1; }
-        if (p.y < 0) { p.y = 0; p.vy *= -1; }
-        else if (p.y > height) { p.y = height; p.vy *= -1; }
+          // Mouse Magnetic Deformation
+          if (mouse.active) {
+            const dx = bx - mouse.x;
+            const dy = by - mouse.y;
+            const dist = Math.hypot(dx, dy);
 
-        // Interaction with mouse proximity: smooth repel
-        if (mouse.active) {
-          const dx = mouse.x - p.x;
-          const dy = mouse.y - p.y;
-          const dist = Math.hypot(dx, dy);
-          if (dist < mouse.radius && dist > 0) {
-            const force = (mouse.radius - dist) / mouse.radius;
-            p.vx -= (dx / dist) * force * 1.8;
-            p.vy -= (dy / dist) * force * 1.8;
-
-            // Connect filament to cursor
-            ctx.beginPath();
-            ctx.moveTo(mouse.x, mouse.y);
-            ctx.lineTo(p.x, p.y);
-            ctx.strokeStyle = `rgba(${baseRgb}, ${0.35 * (1 - dist / mouse.radius)})`;
-            ctx.lineWidth = 0.9;
-            ctx.stroke();
+            if (dist < mouse.radius && dist > 0) {
+              const force = (1 - dist / mouse.radius);
+              // Smooth elastic push away from cursor
+              const push = force * 15;
+              px += (dx / dist) * push;
+              py += (dy / dist) * push;
+              intensity += force * 0.9;
+            }
           }
-        }
 
-        // Draw particle node
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${baseRgb}, 0.55)`;
-        ctx.fill();
+          // Topographic Click Wave Deformation
+          for (const wave of waves) {
+            const dx = bx - wave.x;
+            const dy = by - wave.y;
+            const dist = Math.hypot(dx, dy);
+            const waveDiff = dist - wave.radius;
 
-        // Connect nearby nodes
-        for (let j = i + 1; j < particles.length; j++) {
-          const p2 = particles[j];
-          const d2 = Math.hypot(p.x - p2.x, p.y - p2.y);
-          if (d2 < 125) {
+            if (Math.abs(waveDiff) < 55) {
+              const waveRatio = Math.cos((waveDiff / 55) * Math.PI * 0.5);
+              const push = waveRatio * wave.amplitude;
+              if (dist > 0) {
+                px += (dx / dist) * push;
+                py += (dy / dist) * push;
+              }
+              intensity += (wave.amplitude / 16) * Math.max(0, waveRatio);
+            }
+          }
+
+          const isMajorNode = (c % 4 === 0 && r % 4 === 0);
+
+          if (intensity > 0.05) {
+            // Illuminated Scheele's green node
+            const glow = Math.min(1, intensity);
             ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `rgba(${baseRgb}, ${0.16 * (1 - d2 / 125)})`;
-            ctx.lineWidth = 0.75;
+            ctx.arc(px, py, 1.8 + glow * 1.6, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${scheeleRgb}, ${0.35 + glow * 0.6})`;
+            ctx.fill();
+
+            if (isMajorNode) {
+              // Accent crosshair
+              ctx.strokeStyle = `rgba(${scheeleRgb}, ${0.4 + glow * 0.5})`;
+              ctx.lineWidth = 1.2;
+              ctx.beginPath();
+              ctx.moveTo(px - 4, py);
+              ctx.lineTo(px + 4, py);
+              ctx.moveTo(px, py - 4);
+              ctx.lineTo(px, py + 4);
+              ctx.stroke();
+            }
+          } else if (isMajorNode) {
+            // Subtle CAD crosshair mark `+`
+            ctx.strokeStyle = crosshairColor;
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            ctx.moveTo(px - 3, py);
+            ctx.lineTo(px + 3, py);
+            ctx.moveTo(px, py - 3);
+            ctx.lineTo(px, py + 3);
             ctx.stroke();
+          } else {
+            // Default resting dot
+            ctx.fillStyle = defaultDotColor;
+            ctx.fillRect(px - 0.75, py - 0.75, 1.5, 1.5);
           }
         }
       }
 
-      requestAnimationFrame(renderParticles);
+      // 4. Cursor Precision Target & Coordinate Reticle
+      if (mouse.active) {
+        ctx.save();
+        // Outer targeting reticle circle
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, 22, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${scheeleRgb}, 0.45)`;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 5]);
+        ctx.stroke();
+
+        // Cross ticks at 4 cardinals
+        ctx.setLineDash([]);
+        ctx.strokeStyle = `rgba(${scheeleRgb}, 0.7)`;
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        // Top
+        ctx.moveTo(mouse.x, mouse.y - 28);
+        ctx.lineTo(mouse.x, mouse.y - 18);
+        // Bottom
+        ctx.moveTo(mouse.x, mouse.y + 18);
+        ctx.lineTo(mouse.x, mouse.y + 28);
+        // Left
+        ctx.moveTo(mouse.x - 28, mouse.y);
+        ctx.lineTo(mouse.x - 18, mouse.y);
+        // Right
+        ctx.moveTo(mouse.x + 18, mouse.y);
+        ctx.lineTo(mouse.x + 28, mouse.y);
+        ctx.stroke();
+
+        // Center focal point
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${scheeleRgb}, 0.85)`;
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      requestAnimationFrame(renderMatrix);
     }
-    renderParticles();
+    renderMatrix();
   }
   initInteractiveBackground();
 
