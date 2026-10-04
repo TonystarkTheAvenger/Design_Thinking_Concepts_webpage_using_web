@@ -100,6 +100,17 @@
             <span id="db-status-text">Detecting DB...</span>
           </div>
 
+          <!-- Background Design Selector -->
+          <div class="bg-style-pill" title="Switch Background Design">
+            <span style="font-size:12px;">🎨</span>
+            <select id="bgStyleSelect" aria-label="Background Design">
+              <option value="contours" selected>Contours</option>
+              <option value="blueprint">CAD Grid</option>
+              <option value="geometric">3D Wireframe</option>
+              <option value="minimal">Minimal</option>
+            </select>
+          </div>
+
           <!-- Quick Database Controls -->
           <button class="icon-btn animated-btn" id="btn-export-db" title="Export SQLite / LocalStorage Database as JSON">💾</button>
           <button class="icon-btn animated-btn" id="btn-reset-db" title="Reset Database to Clean Sample State">↺</button>

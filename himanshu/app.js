@@ -896,7 +896,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   initButtonAnimations();
 
-  // --- 14. INTERACTIVE BACKGROUND (ARCHITECTURAL CAD BLUEPRINT MATRIX & WAVE DYNAMICS) --- //
+  // --- 14. INTERACTIVE BACKGROUND (MULTI-STYLE ENGINE · CONTOURS DEFAULT) --- //
   function initInteractiveBackground() {
     const canvas = document.getElementById('bg-canvas');
     if (!canvas) return;
@@ -916,7 +916,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     resize();
     window.addEventListener('resize', resize);
 
-    const mouse = { x: width / 2, y: height / 2, active: false, radius: 140 };
+    const mouse = { x: width / 2, y: height / 2, active: false, radius: 150 };
     window.addEventListener('pointermove', (e) => {
       mouse.x = e.clientX;
       mouse.y = e.clientY;
@@ -936,81 +936,111 @@ document.addEventListener('DOMContentLoaded', async () => {
       mouse.active = false;
     });
 
-    // Waves created by clicks
+    // Ripple waves triggered on click
     const waves = [];
     window.addEventListener('click', (e) => {
       waves.push({
         x: e.clientX,
         y: e.clientY,
         radius: 4,
-        maxRadius: Math.max(width, height) * 0.85,
+        maxRadius: Math.max(width, height) * 0.9,
         speed: 6.5,
-        amplitude: 16,
+        amplitude: 22,
         decay: 0.982
       });
     });
 
-    // Subtle drifting architectural blueprint guide rings
-    const rings = [
-      { xRatio: 0.22, yRatio: 0.32, radius: 130, angle: 0, speed: 0.0012 },
-      { xRatio: 0.78, yRatio: 0.62, radius: 200, angle: Math.PI / 3, speed: -0.0009 },
-      { xRatio: 0.52, yRatio: 0.82, radius: 160, angle: Math.PI, speed: 0.0007 }
-    ];
+    // Background style selection
+    const bgStyleSelect = document.getElementById('bgStyleSelect');
+    let currentStyle = localStorage.getItem('ff_bg_style') || 'contours';
+    if (bgStyleSelect) {
+      bgStyleSelect.value = currentStyle;
+      bgStyleSelect.addEventListener('change', (e) => {
+        currentStyle = e.target.value;
+        localStorage.setItem('ff_bg_style', currentStyle);
+        showToast('Background Style', `Switched to ${e.target.options[e.target.selectedIndex].text}`);
+      });
+    }
 
-    const SPACING = 38; // Grid spacing in px
+    // ==========================================
+    // DESIGN 1: FLOWING TOPOGRAPHIC CONTOURS
+    // ==========================================
+    const CONTOUR_COUNT = 9;
+    const CONTOUR_POINTS = 30;
 
-    function renderMatrix() {
-      ctx.clearRect(0, 0, width, height);
-      const isDark = document.body.classList.contains('dark');
-      // Scheele's Green RGB: 71, 136, 0 (light) | 93, 178, 0 (dark)
-      const scheeleRgb = isDark ? '93, 178, 0' : '71, 136, 0';
-      const defaultDotColor = isDark ? 'rgba(235, 235, 235, 0.12)' : 'rgba(30, 30, 30, 0.1)';
-      const crosshairColor = isDark ? 'rgba(235, 235, 235, 0.22)' : 'rgba(30, 30, 30, 0.18)';
+    function renderContours(scheeleRgb, isDark, time) {
+      ctx.lineWidth = 1.3;
 
-      // 1. Draw subtle architectural drafting guideline rings
-      for (const ring of rings) {
-        ring.angle += ring.speed;
-        const rx = ring.xRatio * width;
-        const ry = ring.yRatio * height;
+      for (let i = 0; i < CONTOUR_COUNT; i++) {
+        const yBase = (height / (CONTOUR_COUNT + 1)) * (i + 1);
+        const freq = 0.0011 + i * 0.00025;
+        const phase = i * 0.85;
+        const baseAmp = 16 + i * 4.5;
 
-        ctx.save();
         ctx.beginPath();
-        ctx.arc(rx, ry, ring.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = isDark ? 'rgba(93, 178, 0, 0.06)' : 'rgba(71, 136, 0, 0.05)';
-        ctx.lineWidth = 1;
-        ctx.setLineDash([4, 12]);
-        ctx.stroke();
+        let first = true;
 
-        // Small cross-tick on circumference
-        const tx = rx + Math.cos(ring.angle) * ring.radius;
-        const ty = ry + Math.sin(ring.angle) * ring.radius;
-        ctx.beginPath();
-        ctx.arc(tx, ty, 2, 0, Math.PI * 2);
-        ctx.fillStyle = isDark ? 'rgba(93, 178, 0, 0.25)' : 'rgba(71, 136, 0, 0.2)';
-        ctx.fill();
-        ctx.restore();
-      }
+        for (let j = 0; j <= CONTOUR_POINTS; j++) {
+          const bx = (width / CONTOUR_POINTS) * j;
+          let by = yBase + Math.sin(time * freq + j * 0.28 + phase) * baseAmp
+                         + Math.cos(time * (freq * 0.65) + j * 0.16) * (baseAmp * 0.45);
 
-      // 2. Update waves
-      for (let w = waves.length - 1; w >= 0; w--) {
-        const wave = waves[w];
-        wave.radius += wave.speed;
-        wave.amplitude *= wave.decay;
+          // Cursor interactive push / pull
+          if (mouse.active) {
+            const dx = bx - mouse.x;
+            const dy = by - mouse.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist < mouse.radius && dist > 0) {
+              const force = (1 - dist / mouse.radius);
+              by += (dy / dist) * force * 38;
+            }
+          }
 
-        if (wave.amplitude < 0.25 || wave.radius >= wave.maxRadius) {
-          waves.splice(w, 1);
-          continue;
+          // Topographic wave crest oscillation
+          for (const wave of waves) {
+            const dx = bx - wave.x;
+            const dy = by - wave.y;
+            const dist = Math.hypot(dx, dy);
+            const waveDiff = dist - wave.radius;
+            if (Math.abs(waveDiff) < 65) {
+              const waveRatio = Math.cos((waveDiff / 65) * Math.PI * 0.5);
+              by += waveRatio * wave.amplitude * 1.6;
+            }
+          }
+
+          if (first) {
+            ctx.moveTo(bx, by);
+            first = false;
+          } else {
+            ctx.lineTo(bx, by);
+          }
         }
 
-        // Draw subtle expanding shockwave guide arc
-        ctx.beginPath();
-        ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(${scheeleRgb}, ${Math.min(0.35, (wave.amplitude / 16) * 0.35)})`;
-        ctx.lineWidth = 1;
+        const opacity = isDark 
+          ? (0.12 + (i / CONTOUR_COUNT) * 0.24)
+          : (0.10 + (i / CONTOUR_COUNT) * 0.20);
+        ctx.strokeStyle = `rgba(${scheeleRgb}, ${opacity})`;
         ctx.stroke();
-      }
 
-      // 3. Render Matrix Grid Points & Crosshairs with Magnetic & Wave Deformation
+        // Small architectural survey markers along contours
+        if (i % 2 === 1) {
+          const markerX = ((i * 140 + time * 0.02) % (width - 140)) + 70;
+          const markerY = yBase + Math.sin(time * freq + (markerX / width) * 5.6 + phase) * baseAmp;
+          ctx.beginPath();
+          ctx.arc(markerX, markerY, 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${scheeleRgb}, ${opacity + 0.25})`;
+          ctx.fill();
+        }
+      }
+    }
+
+    // ==========================================
+    // DESIGN 2: ARCHITECTURAL CAD MATRIX GRID
+    // ==========================================
+    const SPACING = 38;
+    function renderBlueprint(scheeleRgb, isDark) {
+      const defaultDotColor = isDark ? 'rgba(235, 235, 235, 0.12)' : 'rgba(30, 30, 30, 0.1)';
+      const crosshairColor = isDark ? 'rgba(235, 235, 235, 0.22)' : 'rgba(30, 30, 30, 0.18)';
       const cols = Math.ceil(width / SPACING) + 1;
       const rows = Math.ceil(height / SPACING) + 1;
 
@@ -1022,121 +1052,219 @@ document.addEventListener('DOMContentLoaded', async () => {
           let py = by;
           let intensity = 0;
 
-          // Mouse Magnetic Deformation
           if (mouse.active) {
             const dx = bx - mouse.x;
             const dy = by - mouse.y;
             const dist = Math.hypot(dx, dy);
-
             if (dist < mouse.radius && dist > 0) {
               const force = (1 - dist / mouse.radius);
-              // Smooth elastic push away from cursor
-              const push = force * 15;
-              px += (dx / dist) * push;
-              py += (dy / dist) * push;
+              px += (dx / dist) * force * 15;
+              py += (dy / dist) * force * 15;
               intensity += force * 0.9;
             }
           }
 
-          // Topographic Click Wave Deformation
           for (const wave of waves) {
             const dx = bx - wave.x;
             const dy = by - wave.y;
             const dist = Math.hypot(dx, dy);
             const waveDiff = dist - wave.radius;
-
             if (Math.abs(waveDiff) < 55) {
               const waveRatio = Math.cos((waveDiff / 55) * Math.PI * 0.5);
-              const push = waveRatio * wave.amplitude;
               if (dist > 0) {
-                px += (dx / dist) * push;
-                py += (dy / dist) * push;
+                px += (dx / dist) * waveRatio * wave.amplitude;
+                py += (dy / dist) * waveRatio * wave.amplitude;
               }
-              intensity += (wave.amplitude / 16) * Math.max(0, waveRatio);
+              intensity += (wave.amplitude / 22) * Math.max(0, waveRatio);
             }
           }
 
           const isMajorNode = (c % 4 === 0 && r % 4 === 0);
 
           if (intensity > 0.05) {
-            // Illuminated Scheele's green node
             const glow = Math.min(1, intensity);
             ctx.beginPath();
             ctx.arc(px, py, 1.8 + glow * 1.6, 0, Math.PI * 2);
             ctx.fillStyle = `rgba(${scheeleRgb}, ${0.35 + glow * 0.6})`;
             ctx.fill();
-
             if (isMajorNode) {
-              // Accent crosshair
               ctx.strokeStyle = `rgba(${scheeleRgb}, ${0.4 + glow * 0.5})`;
               ctx.lineWidth = 1.2;
               ctx.beginPath();
-              ctx.moveTo(px - 4, py);
-              ctx.lineTo(px + 4, py);
-              ctx.moveTo(px, py - 4);
-              ctx.lineTo(px, py + 4);
+              ctx.moveTo(px - 4, py); ctx.lineTo(px + 4, py);
+              ctx.moveTo(px, py - 4); ctx.lineTo(px, py + 4);
               ctx.stroke();
             }
           } else if (isMajorNode) {
-            // Subtle CAD crosshair mark `+`
             ctx.strokeStyle = crosshairColor;
             ctx.lineWidth = 0.8;
             ctx.beginPath();
-            ctx.moveTo(px - 3, py);
-            ctx.lineTo(px + 3, py);
-            ctx.moveTo(px, py - 3);
-            ctx.lineTo(px, py + 3);
+            ctx.moveTo(px - 3, py); ctx.lineTo(px + 3, py);
+            ctx.moveTo(px, py - 3); ctx.lineTo(px + 3, py);
             ctx.stroke();
           } else {
-            // Default resting dot
             ctx.fillStyle = defaultDotColor;
             ctx.fillRect(px - 0.75, py - 0.75, 1.5, 1.5);
           }
         }
       }
+    }
 
-      // 4. Cursor Precision Target & Coordinate Reticle
-      if (mouse.active) {
+    // ==========================================
+    // DESIGN 3: 3D FLOATING WIREFRAME POLYGONS
+    // ==========================================
+    const solids = [
+      { x: 0.22, y: 0.25, size: 70, rx: 0.4, ry: 0.6, rz: 0.2, spd: 0.007, type: 'cube' },
+      { x: 0.82, y: 0.35, size: 90, rx: 0.8, ry: 0.2, rz: 0.5, spd: -0.006, type: 'octa' },
+      { x: 0.52, y: 0.72, size: 80, rx: 0.2, ry: 0.7, rz: 0.3, spd: 0.006, type: 'cube' },
+      { x: 0.16, y: 0.80, size: 65, rx: 0.5, ry: 0.5, rz: 0.1, spd: -0.008, type: 'octa' }
+    ];
+
+    function renderGeometric(scheeleRgb, isDark) {
+      for (const s of solids) {
+        s.rx += s.spd * 0.7;
+        s.ry += s.spd;
+        s.rz += s.spd * 0.5;
+
+        let cx = s.x * width;
+        let cy = s.y * height;
+
+        if (mouse.active) {
+          cx += (mouse.x - width / 2) * 0.04;
+          cy += (mouse.y - height / 2) * 0.04;
+        }
+
         ctx.save();
-        // Outer targeting reticle circle
-        ctx.beginPath();
-        ctx.arc(mouse.x, mouse.y, 22, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(${scheeleRgb}, 0.45)`;
+        ctx.translate(cx, cy);
+
+        const d = s.size;
+        const verts = s.type === 'cube' ? [
+          [-d, -d, -d], [d, -d, -d], [d, d, -d], [-d, d, -d],
+          [-d, -d,  d], [d, -d,  d], [d, d,  d], [-d, d,  d]
+        ] : [
+          [0, -d, 0], [0, d, 0], [-d, 0, 0], [d, 0, 0], [0, 0, -d], [0, 0, d]
+        ];
+
+        const proj = verts.map(([x, y, z]) => {
+          let y1 = y * Math.cos(s.rx) - z * Math.sin(s.rx);
+          let z1 = y * Math.sin(s.rx) + z * Math.cos(s.rx);
+          let x2 = x * Math.cos(s.ry) + z1 * Math.sin(s.ry);
+          let z2 = -x * Math.sin(s.ry) + z1 * Math.cos(s.ry);
+          let x3 = x2 * Math.cos(s.rz) - y1 * Math.sin(s.rz);
+          let y3 = x2 * Math.sin(s.rz) + y1 * Math.cos(s.rz);
+          const f = 250 / (250 + z2);
+          return [x3 * f, y3 * f];
+        });
+
+        const edges = s.type === 'cube' ? [
+          [0,1],[1,2],[2,3],[3,0],
+          [4,5],[5,6],[6,7],[7,4],
+          [0,4],[1,5],[2,6],[3,7]
+        ] : [
+          [0,2],[0,3],[0,4],[0,5],
+          [1,2],[1,3],[1,4],[1,5],
+          [2,4],[4,3],[3,5],[5,2]
+        ];
+
+        ctx.strokeStyle = `rgba(${scheeleRgb}, ${isDark ? 0.26 : 0.20})`;
         ctx.lineWidth = 1;
-        ctx.setLineDash([3, 5]);
-        ctx.stroke();
 
-        // Cross ticks at 4 cardinals
-        ctx.setLineDash([]);
-        ctx.strokeStyle = `rgba(${scheeleRgb}, 0.7)`;
-        ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        // Top
-        ctx.moveTo(mouse.x, mouse.y - 28);
-        ctx.lineTo(mouse.x, mouse.y - 18);
-        // Bottom
-        ctx.moveTo(mouse.x, mouse.y + 18);
-        ctx.lineTo(mouse.x, mouse.y + 28);
-        // Left
-        ctx.moveTo(mouse.x - 28, mouse.y);
-        ctx.lineTo(mouse.x - 18, mouse.y);
-        // Right
-        ctx.moveTo(mouse.x + 18, mouse.y);
-        ctx.lineTo(mouse.x + 28, mouse.y);
-        ctx.stroke();
+        for (const [p1, p2] of edges) {
+          ctx.beginPath();
+          ctx.moveTo(proj[p1][0], proj[p1][1]);
+          ctx.lineTo(proj[p2][0], proj[p2][1]);
+          ctx.stroke();
+        }
 
-        // Center focal point
-        ctx.beginPath();
-        ctx.arc(mouse.x, mouse.y, 2, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${scheeleRgb}, 0.85)`;
-        ctx.fill();
+        for (const pt of proj) {
+          ctx.beginPath();
+          ctx.arc(pt[0], pt[1], 2, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${scheeleRgb}, ${isDark ? 0.45 : 0.35})`;
+          ctx.fill();
+        }
 
         ctx.restore();
       }
-
-      requestAnimationFrame(renderMatrix);
     }
-    renderMatrix();
+
+    // ==========================================
+    // DESIGN 4: MINIMAL HORIZON & PERSPECTIVE
+    // ==========================================
+    function renderMinimal(scheeleRgb, isDark) {
+      const horizonY = height * 0.65;
+      ctx.beginPath();
+      ctx.moveTo(0, horizonY);
+      ctx.lineTo(width, horizonY);
+      ctx.strokeStyle = `rgba(${scheeleRgb}, 0.16)`;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([8, 12]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      const rays = 8;
+      for (let r = 0; r <= rays; r++) {
+        const x = (width / rays) * r;
+        ctx.beginPath();
+        ctx.moveTo(width / 2, horizonY);
+        ctx.lineTo(x, height);
+        ctx.strokeStyle = `rgba(${scheeleRgb}, 0.08)`;
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+      }
+    }
+
+    // Main animation loop
+    function mainLoop(time) {
+      ctx.clearRect(0, 0, width, height);
+      const isDark = document.body.classList.contains('dark');
+      const scheeleRgb = isDark ? '93, 178, 0' : '71, 136, 0';
+
+      // Click shockwaves
+      for (let w = waves.length - 1; w >= 0; w--) {
+        const wave = waves[w];
+        wave.radius += wave.speed;
+        wave.amplitude *= wave.decay;
+        if (wave.amplitude < 0.25 || wave.radius >= wave.maxRadius) {
+          waves.splice(w, 1);
+          continue;
+        }
+        ctx.beginPath();
+        ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${scheeleRgb}, ${Math.min(0.3, (wave.amplitude / 22) * 0.3)})`;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      }
+
+      // Render the active background design
+      if (currentStyle === 'contours') {
+        renderContours(scheeleRgb, isDark, time);
+      } else if (currentStyle === 'blueprint') {
+        renderBlueprint(scheeleRgb, isDark);
+      } else if (currentStyle === 'geometric') {
+        renderGeometric(scheeleRgb, isDark);
+      } else if (currentStyle === 'minimal') {
+        renderMinimal(scheeleRgb, isDark);
+      }
+
+      // Cursor reticle
+      if (mouse.active) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, 18, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${scheeleRgb}, 0.35)`;
+        ctx.lineWidth = 0.9;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${scheeleRgb}, 0.8)`;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      requestAnimationFrame(mainLoop);
+    }
+    requestAnimationFrame(mainLoop);
   }
   initInteractiveBackground();
 

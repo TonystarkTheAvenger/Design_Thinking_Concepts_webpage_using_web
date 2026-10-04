@@ -532,6 +532,36 @@ button:active, .primary-btn:active, .secondary-btn:active, .icon-btn:active, .fi
 .db-pill.sqlite .status-dot { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
 .db-pill.localstorage .status-dot { background: #9b51e0; box-shadow: 0 0 8px #9b51e0; }
 
+/* Background Design Selector Pill Badge */
+.bg-style-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: #FFFFFF !important;
+  color: #1E1E1E !important;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+.bg-style-pill select {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  color: #1E1E1E;
+  cursor: pointer;
+}
+.dark .bg-style-pill {
+  background: #FFFFFF !important;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.dark .bg-style-pill select {
+  color: #111111 !important;
+}
+
 .notif-btn {
   position: relative;
   font-size: 18px;
