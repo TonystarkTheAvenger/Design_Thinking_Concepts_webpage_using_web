@@ -834,21 +834,160 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // --- 11. MOBILE SIDEBAR DRAWER --- //
+  // --- 11. SIDEBAR TOGGLE & COLLAPSE CONTROLS --- //
+  const appShell = document.getElementById('appShell');
   const sidebar = document.getElementById('sidebar');
   const openSidebar = document.getElementById('openSidebar');
+  const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
   const mobileMenuClose = document.getElementById('mobileMenuClose');
 
-  if (openSidebar) {
-    openSidebar.addEventListener('click', () => {
-      sidebar.classList.add('open');
-    });
+  function toggleSidebar() {
+    if (window.innerWidth <= 768) {
+      sidebar.classList.toggle('open');
+    } else {
+      appShell.classList.toggle('sidebar-collapsed');
+    }
   }
-  if (mobileMenuClose) {
-    mobileMenuClose.addEventListener('click', () => {
+
+  function closeSidebar() {
+    if (window.innerWidth <= 768) {
       sidebar.classList.remove('open');
+    } else {
+      appShell.classList.add('sidebar-collapsed');
+    }
+  }
+
+  if (openSidebar) openSidebar.addEventListener('click', toggleSidebar);
+  if (sidebarCloseBtn) sidebarCloseBtn.addEventListener('click', closeSidebar);
+  if (mobileMenuClose) mobileMenuClose.addEventListener('click', closeSidebar);
+
+  // --- 12. TOP ACTIONS (NOTIFICATIONS & AVATAR) --- //
+  const notifBtn = document.getElementById('notifBtn');
+  if (notifBtn) {
+    notifBtn.addEventListener('click', () => {
+      showToast('Notifications Active', '3 requests in progress · Next technician visit at 5:30 PM');
     });
   }
+
+  const topAvatar = document.getElementById('topAvatar');
+  if (topAvatar) {
+    topAvatar.addEventListener('click', () => {
+      showToast(state.currentUser.name, `${state.currentRole.toUpperCase()} · Greenview Residency`);
+    });
+  }
+
+  // --- 13. BUTTON CLICK RIPPLE ANIMATIONS --- //
+  function initButtonAnimations() {
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('button, .primary-btn, .secondary-btn, .icon-btn, .filter, .stat-card, .nav-item, .sidebar-toggle-btn');
+      if (!btn) return;
+
+      const rect = btn.getBoundingClientRect();
+      const ripple = document.createElement('span');
+      ripple.className = 'btn-ripple';
+      const size = Math.max(rect.width, rect.height);
+      ripple.style.width = ripple.style.height = `${size}px`;
+      ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+      ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+
+      btn.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    });
+  }
+  initButtonAnimations();
+
+  // --- 14. INTERACTIVE BACKGROUND (CANVAS + MOUSE GLOW) --- //
+  function initInteractiveBackground() {
+    const canvas = document.getElementById('bg-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    const mouse = { x: width / 2, y: height / 2, radius: 140 };
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    // Smooth cursor glow follower
+    const cursorGlow = document.getElementById('cursor-glow');
+    let glowX = mouse.x, glowY = mouse.y;
+    function updateGlow() {
+      glowX += (mouse.x - glowX) * 0.08;
+      glowY += (mouse.y - glowY) * 0.08;
+      if (cursorGlow) {
+        cursorGlow.style.transform = `translate3d(${glowX - 160}px, ${glowY - 160}px, 0)`;
+      }
+      requestAnimationFrame(updateGlow);
+    }
+    updateGlow();
+
+    // Floating particles connecting with Scheele's green lines
+    const particleCount = Math.min(Math.floor((width * height) / 22000), 50);
+    const particles = [];
+    for (let i = 0; i < particleCount; i++) {
+      particles.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+        size: Math.random() * 2 + 1.2
+      });
+    }
+
+    function renderParticles() {
+      ctx.clearRect(0, 0, width, height);
+      const isDark = document.body.classList.contains('dark');
+      const baseRgb = isDark ? '93, 178, 0' : '71, 136, 0'; // Scheele's Green RGB
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x < 0 || p.x > width) p.vx *= -1;
+        if (p.y < 0 || p.y > height) p.vy *= -1;
+
+        // Interaction with mouse proximity
+        const dx = mouse.x - p.x;
+        const dy = mouse.y - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < mouse.radius) {
+          const force = (mouse.radius - dist) / mouse.radius;
+          p.x -= (dx / dist) * force * 1.5;
+          p.y -= (dy / dist) * force * 1.5;
+        }
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${baseRgb}, 0.45)`;
+        ctx.fill();
+
+        // Connect nearby nodes
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const d2 = Math.hypot(p.x - p2.x, p.y - p2.y);
+          if (d2 < 110) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(${baseRgb}, ${0.14 * (1 - d2 / 110)})`;
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(renderParticles);
+    }
+    renderParticles();
+  }
+  initInteractiveBackground();
 
   // Initial load
   await reloadData();

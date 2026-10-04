@@ -11,21 +11,27 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Ambient Gradient Blobs (Clay & Coral) -->
+  <!-- Interactive Background (Canvas & Cursor Follower) -->
   <div id="ambient-bg">
+    <canvas id="bg-canvas"></canvas>
+    <div id="cursor-glow"></div>
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
   </div>
 
-  <div class="app-shell">
+  <div class="app-shell" id="appShell">
     <!-- LEFT SIDEBAR -->
     <aside class="sidebar" id="sidebar">
       <div class="brand">
-        <div class="brand-mark">F</div>
-        <div>
-          <strong>FixFlow</strong>
-          <span>Maintenance OS</span>
+        <div class="brand-left">
+          <div class="brand-mark">F</div>
+          <div>
+            <strong>FixFlow</strong>
+            <span>Maintenance OS</span>
+          </div>
         </div>
+        <!-- Sidebar Close / Collapse Button -->
+        <button class="sidebar-toggle-btn" id="sidebarCloseBtn" title="Close / Collapse Sidebar" aria-label="Close sidebar">✕</button>
       </div>
 
       <!-- Role Switcher -->
@@ -66,7 +72,7 @@
 
         <div class="user-mini">
           <div class="avatar" id="sidebarAvatar">AM</div>
-          <div>
+          <div style="flex:1;">
             <strong id="sidebarUserName">Aarav Mehta</strong>
             <span id="sidebarUserRole">Unit 402 · Resident</span>
           </div>
@@ -79,11 +85,14 @@
     <main class="main">
       <!-- TOPBAR -->
       <header class="topbar">
-        <button class="icon-btn mobile-only" id="openSidebar" aria-label="Open menu">☰</button>
-        <div class="breadcrumb">
-          <span>Greenview Heights</span>
-          <i>/</i>
-          <strong id="pageTitle">Dashboard</strong>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <!-- Desktop & Mobile Sidebar Toggle -->
+          <button class="icon-btn sidebar-trigger-btn" id="openSidebar" title="Toggle Sidebar" aria-label="Toggle Sidebar">☰</button>
+          <div class="breadcrumb">
+            <span>Greenview Heights</span>
+            <i>/</i>
+            <strong id="pageTitle">Dashboard</strong>
+          </div>
         </div>
 
         <div class="top-actions">
@@ -94,14 +103,14 @@
           </div>
 
           <!-- Quick Database Controls -->
-          <button class="icon-btn" id="btn-export-db" title="Export SQLite / LocalStorage Database as JSON">💾</button>
-          <button class="icon-btn" id="btn-reset-db" title="Reset Database to Clean Sample State">↺</button>
+          <button class="icon-btn animated-btn" id="btn-export-db" title="Export SQLite / LocalStorage Database as JSON">💾</button>
+          <button class="icon-btn animated-btn" id="btn-reset-db" title="Reset Database to Clean Sample State">↺</button>
 
           <!-- Theme Toggle Button -->
-          <button id="theme-toggle" class="icon-btn" title="Toggle Light/Dark Theme">🌙</button>
+          <button id="theme-toggle" class="icon-btn animated-btn" title="Toggle Light/Dark Theme">🌙</button>
 
           <!-- Notification Bell -->
-          <button class="notif-btn" id="notifBtn" aria-label="Notifications" title="Live updates active">
+          <button class="notif-btn animated-btn" id="notifBtn" aria-label="Notifications" title="Live updates active">
             🔔<span></span>
           </button>
 

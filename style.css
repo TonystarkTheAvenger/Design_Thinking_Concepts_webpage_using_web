@@ -7,7 +7,7 @@
   --accent: #E6E4D7;
   --border: #D2CBBB;
   --radius: 0.75rem; 
-  --chart-1: #F26A4B;
+  --chart-1: #478800; /* Scheele's Green */
   --chart-2: #1E1E1E;
   --chart-3: #5E5A52;
   --chart-4: #A89F8F;
@@ -54,7 +54,7 @@
   --accent: #363636;
   --border: #2C2C2C;
   --radius: 0.75rem;
-  --chart-1: #F26A4B;
+  --chart-1: #5db200; /* Scheele's Green for Dark Mode */
   --chart-2: #D9CFC2;
   --chart-3: #8E8A83;
   --chart-4: #5C5A56;
@@ -310,7 +310,7 @@ section { padding: 4rem 0; }
     border-radius: 50%;
     font-size: 1.5rem;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(242, 106, 75, 0.3);
+    box-shadow: 0 4px 15px rgba(71, 136, 0, 0.3);
     opacity: 0;
     transform: translateY(20px);
     visibility: hidden;
@@ -337,7 +337,7 @@ section { padding: 4rem 0; }
     font-size: 0.8rem;
     font-weight: 600;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(242, 106, 75, 0.25);
+    box-shadow: 0 2px 8px rgba(71, 136, 0, 0.25);
 }
 .nav-cta-btn:hover {
     background: var(--primary);
@@ -347,18 +347,18 @@ section { padding: 4rem 0; }
 
 .hero-cta-btn {
     text-decoration: none;
-    background: linear-gradient(135deg, var(--chart-1), #d95333);
+    background: linear-gradient(135deg, var(--chart-1), #376a00);
     color: white;
     padding: 8px 18px;
     border-radius: 8px;
     font-size: 0.9rem;
     font-weight: 600;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 14px rgba(242, 106, 75, 0.3);
+    box-shadow: 0 4px 14px rgba(71, 136, 0, 0.3);
 }
 .hero-cta-btn:hover {
     opacity: 0.95;
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(242, 106, 75, 0.45);
+    box-shadow: 0 6px 20px rgba(71, 136, 0, 0.45);
 }
 
