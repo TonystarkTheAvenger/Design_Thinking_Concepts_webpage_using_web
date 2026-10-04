@@ -113,6 +113,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    function initCardTilt() {
+        if (window.matchMedia("(pointer: fine)").matches) {
+            const interactiveCards = document.querySelectorAll('.interactive-card, .theme-card');
+            interactiveCards.forEach(card => {
+                card.onmousemove = (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left; 
+                    const y = e.clientY - rect.top;  
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = ((y - centerY) / centerY) * -5;
+                    const rotateY = ((x - centerX) / centerX) * 5;
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.01, 1.01, 1.01)`;
+                    card.style.transition = 'transform 0.1s ease-out';
+                };
+                card.onmouseleave = () => {
+                    card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+                    card.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
+                };
+            });
+        }
+    }
+
     function renderCurrentView() {
         // Toggle view containers
         document.querySelectorAll('.role-section').forEach(sec => sec.classList.remove('active-section'));
@@ -127,6 +150,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('manager-dashboard').classList.add('active-section');
             renderManagerView();
         }
+        initCardTilt();
     }
 
     // Helper: badge markup
