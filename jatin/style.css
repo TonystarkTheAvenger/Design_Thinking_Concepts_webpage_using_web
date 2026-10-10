@@ -1021,46 +1021,63 @@ body {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   display: grid;
   place-items: center;
-  z-index: 999;
-  padding: 20px;
-  animation: fadeIn 0.2s ease;
+  z-index: 1000;
+  padding: 24px;
+  animation: modalBackdropFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
+.modal-backdrop[hidden] {
+  display: none !important;
+}
+@keyframes modalBackdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .modal {
   background: var(--card);
   border: 1px solid var(--border-strong);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 30px var(--pink-glow);
-  border-radius: var(--radius);
-  max-width: 580px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5), 0 0 35px var(--pink-glow);
+  border-radius: calc(var(--radius) + 4px);
+  max-width: 620px;
   width: 100%;
-  max-height: 90vh;
+  max-height: 88vh;
   overflow-y: auto;
   position: relative;
-  padding: 28px;
+  padding: 32px 30px;
+  animation: modalScaleUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
+@keyframes modalScaleUp {
+  from { opacity: 0; transform: translateY(18px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .modal-close {
   position: absolute;
-  top: 18px;
-  right: 18px;
-  background: transparent;
-  border: none;
-  font-size: 20px;
+  top: 20px;
+  right: 20px;
+  background: rgba(236, 72, 153, 0.08);
+  border: 1px solid rgba(236, 72, 153, 0.25);
+  font-size: 16px;
   cursor: pointer;
-  color: var(--muted);
-  width: 32px;
-  height: 32px;
+  color: var(--pink);
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
   border-radius: 50%;
-  transition: all 0.2s;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 10;
 }
 .modal-close:hover {
-  background: var(--pink-soft);
-  color: var(--pink);
+  background: var(--pink);
+  color: #ffffff;
+  box-shadow: 0 0 14px var(--pink-glow);
+  transform: rotate(90deg) scale(1.05);
 }
 
 .modal-inner h2 {

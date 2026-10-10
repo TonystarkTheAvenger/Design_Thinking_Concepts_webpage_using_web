@@ -543,16 +543,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   function openModal(html) {
     modalContent.innerHTML = html;
     modalBackdrop.hidden = false;
+    modalBackdrop.style.display = 'grid';
   }
 
   function closeModal() {
     modalBackdrop.hidden = true;
+    modalBackdrop.style.display = 'none';
     modalContent.innerHTML = '';
   }
 
   modalClose.addEventListener('click', closeModal);
   modalBackdrop.addEventListener('click', (e) => {
     if (e.target === modalBackdrop) closeModal();
+  });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modalBackdrop.hidden) {
+      closeModal();
+    }
   });
 
   function showReportModal() {

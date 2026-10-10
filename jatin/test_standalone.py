@@ -49,6 +49,7 @@ def run_tests():
     assert "grate-badge" in html, "index.html should implement the Great Badge system"
     assert "exec-header" in html, "index.html should use the rearranged executive header layout"
     assert "inspectorPane" in html, "index.html should contain the master-detail inspector pane"
+    assert 'id="modalBackdrop"' in html and 'hidden' in html, "index.html must have hidden modalBackdrop"
     print("   [OK] index.html is 100% independent and contains rearranged executive layout.")
 
     print("[4/5] Testing Great Badge and Pink design system in style.css...")
@@ -58,7 +59,8 @@ def run_tests():
     assert ".grate-badge" in css, "style.css must define .grate-badge class"
     assert ".grate-badge-pulse" in css, "style.css must define pulsing radar badge"
     assert ".exec-workspace" in css, "style.css must define split master-detail workspace"
-    print("   [OK] style.css features complete Pink Palette and Great Badge system.")
+    assert ".modal-backdrop[hidden]" in css, "style.css must ensure modal-backdrop[hidden] is hidden"
+    print("   [OK] style.css features complete Pink Palette, Great Badge system, and modal guards.")
 
     print("[5/5] Testing JavaScript app and DB client...")
     with open(os.path.join(jatin_dir, "db.js"), "r", encoding="utf-8") as f:
