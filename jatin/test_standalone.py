@@ -52,15 +52,15 @@ def run_tests():
     assert 'id="modalBackdrop"' in html and 'hidden' in html, "index.html must have hidden modalBackdrop"
     print("   [OK] index.html is 100% independent and contains rearranged executive layout.")
 
-    print("[4/5] Testing Great Badge and Pink design system in style.css...")
+    print("[4/5] Testing Great Badge and Cyan design system in style.css...")
     with open(os.path.join(jatin_dir, "style.css"), "r", encoding="utf-8") as f:
         css = f.read()
-    assert "--pink:" in css, "style.css must define --pink theme variable"
+    assert "--cyan:" in css, "style.css must define --cyan theme variable"
     assert ".grate-badge" in css, "style.css must define .grate-badge class"
     assert ".grate-badge-pulse" in css, "style.css must define pulsing radar badge"
     assert ".exec-workspace" in css, "style.css must define split master-detail workspace"
     assert ".modal-backdrop[hidden]" in css, "style.css must ensure modal-backdrop[hidden] is hidden"
-    print("   [OK] style.css features complete Pink Palette, Great Badge system, and modal guards.")
+    print("   [OK] style.css features complete Cyan Palette, Great Badge system, and modal guards.")
 
     print("[5/5] Testing JavaScript app and DB client...")
     with open(os.path.join(jatin_dir, "db.js"), "r", encoding="utf-8") as f:
@@ -72,7 +72,7 @@ def run_tests():
         app_js = f.read()
     assert "grate-badge" in app_js, "app.js must render Great Badges"
     assert "renderLiveInspector" in app_js, "app.js must render live master-detail inspector"
-    assert "pinkRgb" in app_js, "app.js must use pink canvas color"
+    assert "cyanRgb" in app_js, "app.js must use cyan canvas color"
     print("   [OK] app.js and db.js fully coordinated.")
 
     print("[6/6] Testing live HTTP server & REST API...")

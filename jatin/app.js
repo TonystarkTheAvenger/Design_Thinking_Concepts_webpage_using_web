@@ -261,7 +261,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       <div class="inspector-header">
         <div class="inspector-title-area">
           <div style="display:flex; align-items:center; gap:8px;">
-            <span class="grate-badge grate-badge-pink">${ticket.ticket_number}</span>
+            <span class="grate-badge grate-badge-cyan">${ticket.ticket_number}</span>
             <span class="grate-badge grate-badge-unit">${ticket.unit}</span>
             ${getCategoryBadge(ticket.category)}
           </div>
@@ -313,7 +313,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       </div>
 
       ${ticket.technician_notes ? `
-        <div class="inspector-stat-box" style="border-left: 3px solid var(--pink);">
+        <div class="inspector-stat-box" style="border-left: 3px solid var(--cyan);">
           <span>Technician Diagnostic Notes</span>
           <p style="font-size:12px; margin:4px 0;">${ticket.technician_notes}</p>
           ${ticket.parts_used ? `<small style="font-family:var(--font-mono); color:var(--muted)">Parts Requisition: ${ticket.parts_used}</small>` : ''}
@@ -673,7 +673,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-right:32px;">
           <div>
             <div style="display:flex; gap:6px; margin-bottom:4px;">
-              <span class="grate-badge grate-badge-pink">${ticket.ticket_number}</span>
+              <span class="grate-badge grate-badge-cyan">${ticket.ticket_number}</span>
               <span class="grate-badge grate-badge-unit">${ticket.unit}</span>
             </div>
             <h2>${ticket.title}</h2>
@@ -705,7 +705,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
 
         ${ticket.technician_notes ? `
-          <div class="inspector-stat-box" style="margin-bottom:14px; border-left:3px solid var(--pink);">
+          <div class="inspector-stat-box" style="margin-bottom:14px; border-left:3px solid var(--cyan);">
             <span>Technician Fix Log</span>
             <p style="font-size:12px; margin:2px 0;">${ticket.technician_notes}</p>
             ${ticket.parts_used ? `<small style="font-family:var(--font-mono); color:var(--muted)">Parts: ${ticket.parts_used}</small>` : ''}
@@ -1014,7 +1014,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     const CONTOUR_COUNT = 8;
-    function renderSubtleWaves(pinkRgb, isDark, time) {
+    function renderSubtleWaves(cyanRgb, isDark, time) {
       ctx.lineWidth = 0.9;
       const stepX = 20;
 
@@ -1062,13 +1062,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const opacity = isDark 
           ? (0.10 + (i / CONTOUR_COUNT) * 0.16)
           : (0.07 + (i / CONTOUR_COUNT) * 0.12);
-        ctx.strokeStyle = `rgba(${pinkRgb}, ${opacity})`;
+        ctx.strokeStyle = `rgba(${cyanRgb}, ${opacity})`;
         ctx.stroke();
       }
     }
 
     const SPACING = 40;
-    function renderSubtleGrid(pinkRgb, isDark) {
+    function renderSubtleGrid(cyanRgb, isDark) {
       const defaultDotColor = isDark ? 'rgba(240, 240, 240, 0.06)' : 'rgba(30, 30, 30, 0.05)';
       const cols = Math.ceil(width / SPACING) + 1;
       const rows = Math.ceil(height / SPACING) + 1;
@@ -1097,7 +1097,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const glow = Math.min(1, intensity);
             ctx.beginPath();
             ctx.arc(px, py, 1.4 + glow * 1.0, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(${pinkRgb}, ${0.3 + glow * 0.5})`;
+            ctx.fillStyle = `rgba(${cyanRgb}, ${0.3 + glow * 0.5})`;
             ctx.fill();
           } else {
             ctx.fillStyle = defaultDotColor;
@@ -1115,7 +1115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       radius: Math.random() * 1.5 + 1
     }));
 
-    function renderSubtleMesh(pinkRgb, isDark) {
+    function renderSubtleMesh(cyanRgb, isDark) {
       ctx.lineWidth = 0.6;
 
       for (let i = 0; i < particles.length; i++) {
@@ -1130,7 +1130,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${pinkRgb}, ${isDark ? 0.25 : 0.18})`;
+        ctx.fillStyle = `rgba(${cyanRgb}, ${isDark ? 0.25 : 0.18})`;
         ctx.fill();
 
         for (let j = i + 1; j < particles.length; j++) {
@@ -1140,16 +1140,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `rgba(${pinkRgb}, ${(1 - dist / 90) * 0.1})`;
+            ctx.strokeStyle = `rgba(${cyanRgb}, ${(1 - dist / 90) * 0.1})`;
             ctx.stroke();
           }
         }
       }
     }
 
-    function renderMinimalAura(pinkRgb, isDark) {
+    function renderMinimalAura(cyanRgb, isDark) {
       const grad = ctx.createRadialGradient(width / 2, height / 2, 40, width / 2, height / 2, Math.max(width, height) * 0.55);
-      grad.addColorStop(0, `rgba(${pinkRgb}, ${isDark ? 0.05 : 0.03})`);
+      grad.addColorStop(0, `rgba(${cyanRgb}, ${isDark ? 0.05 : 0.03})`);
       grad.addColorStop(1, 'transparent');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, width, height);
@@ -1158,7 +1158,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function mainLoop(time) {
       ctx.clearRect(0, 0, width, height);
       const isDark = document.body.classList.contains('dark');
-      const pinkRgb = isDark ? '236, 72, 153' : '219, 39, 119';
+      const cyanRgb = isDark ? '6, 182, 212' : '8, 145, 178';
 
       for (let w = waves.length - 1; w >= 0; w--) {
         const wave = waves[w];
@@ -1170,19 +1170,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         ctx.beginPath();
         ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(${pinkRgb}, ${Math.min(0.25, (wave.amplitude / 22) * 0.2)})`;
+        ctx.strokeStyle = `rgba(${cyanRgb}, ${Math.min(0.25, (wave.amplitude / 22) * 0.2)})`;
         ctx.lineWidth = 1;
         ctx.stroke();
       }
 
       if (currentStyle === 'subtle-waves') {
-        renderSubtleWaves(pinkRgb, isDark, time);
+        renderSubtleWaves(cyanRgb, isDark, time);
       } else if (currentStyle === 'subtle-grid') {
-        renderSubtleGrid(pinkRgb, isDark);
+        renderSubtleGrid(cyanRgb, isDark);
       } else if (currentStyle === 'subtle-mesh') {
-        renderSubtleMesh(pinkRgb, isDark);
+        renderSubtleMesh(cyanRgb, isDark);
       } else if (currentStyle === 'minimal') {
-        renderMinimalAura(pinkRgb, isDark);
+        renderMinimalAura(cyanRgb, isDark);
       }
 
       requestAnimationFrame(mainLoop);
