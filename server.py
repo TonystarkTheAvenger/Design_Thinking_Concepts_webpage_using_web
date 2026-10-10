@@ -7,17 +7,26 @@ import urllib.parse
 from datetime import datetime
 
 PORT = 8000
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "maintenance.db")
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+HIMANSHU_DIR = os.path.join(ROOT_DIR, "himanshu")
+DB_PATH = os.path.join(HIMANSHU_DIR, "maintenance.db")
+
+def ensure_db():
+    if not os.path.exists(DB_PATH):
+        sys.path.insert(0, HIMANSHU_DIR)
+        from init_db import init_db
+        init_db()
+
+ensure_db()
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 
-class MaintenanceApiHandler(http.server.SimpleHTTPRequestHandler):
+class ProjectServerHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=BASE_DIR, **kwargs)
+        super().__init__(*args, directory=ROOT_DIR, **kwargs)
 
     def _send_cors_headers(self):
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -152,7 +161,7 @@ class MaintenanceApiHandler(http.server.SimpleHTTPRequestHandler):
             })
             return
 
-        # Fallback to standard file serving
+        # Fallback to standard file serving from workspace root
         return super().do_GET()
 
     def do_POST(self):
@@ -225,6 +234,7 @@ class MaintenanceApiHandler(http.server.SimpleHTTPRequestHandler):
                 return
 
         if path == "/api/reset":
+            sys.path.insert(0, HIMANSHU_DIR)
             from init_db import init_db
             try:
                 os.remove(DB_PATH)
@@ -324,8 +334,11 @@ class MaintenanceApiHandler(http.server.SimpleHTTPRequestHandler):
 
 def run_server(port=PORT):
     server_address = ("", port)
-    httpd = http.server.HTTPServer(server_address, MaintenanceApiHandler)
-    print(f"Server running at http://localhost:{port}/")
+    httpd = http.server.HTTPServer(server_address, ProjectServerHandler)
+    print(f"FixFlow Full-Stack Server running at http://localhost:{port}/")
+    print(f" -> Root Case Study: http://localhost:{port}/")
+    print(f" -> FixFlow Dashboard: http://localhost:{port}/himanshu/")
+    print(f" -> API Health: http://localhost:{port}/api/health")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

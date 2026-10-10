@@ -1,13 +1,14 @@
 /**
- * Universal Database Layer for Apartment Maintenance System
- * Automatically connects to SQLite backend (via server.py) when available,
- * or operates via Browser LocalStorage for standalone/static execution.
+ * FixFlow DB Layer — Jatin Spare Edition
+ * Dual-Mode Database Support:
+ * Seamlessly connects to Python SQLite Backend (server.py) on Port 8000
+ * with automatic fallback to persistent Browser LocalStorage.
  */
 
 const DB = (function () {
-    const STORAGE_KEY_TICKETS = 'maint_db_tickets_v1';
-    const STORAGE_KEY_USERS = 'maint_db_users_v1';
-    const STORAGE_KEY_LOGS = 'maint_db_logs_v1';
+    const STORAGE_KEY_TICKETS = 'maint_db_jatin_tickets_v1';
+    const STORAGE_KEY_USERS = 'maint_db_jatin_users_v1';
+    const STORAGE_KEY_LOGS = 'maint_db_jatin_logs_v1';
 
     let isApiConnected = false;
     let apiBaseUrl = '';
@@ -177,7 +178,7 @@ const DB = (function () {
                     }
                 }
             } catch (e) {
-                // Try next candidate
+                // Next candidate
             }
         }
         isApiConnected = false;

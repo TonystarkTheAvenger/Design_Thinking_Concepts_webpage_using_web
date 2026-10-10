@@ -1,6 +1,6 @@
 /**
- * FixFlow — Apartment Maintenance OS
- * Multi-Role Dashboard with Dual-Mode Database Support (SQLite / LocalStorage)
+ * FixFlow — Apartment Maintenance OS (Jatin Edition)
+ * Fully Subtle Frontend with Dual-Mode Database Support
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -19,8 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- 2. THEME CONFIGURATION --- //
   const themeToggleBtn = document.getElementById('theme-toggle');
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const savedTheme = localStorage.getItem('theme') || (prefersDark ? 'dark' : 'light');
+  const savedTheme = localStorage.getItem('theme_jatin') || 'light';
 
   if (savedTheme === 'dark') {
     document.body.classList.add('dark');
@@ -34,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     themeToggleBtn.addEventListener('click', () => {
       const isDark = document.body.classList.toggle('dark');
       themeToggleBtn.textContent = isDark ? '☀️' : '🌙';
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      localStorage.setItem('theme_jatin', isDark ? 'dark' : 'light');
     });
   }
 
@@ -97,7 +96,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderActivityView();
   }
 
-  // Update profile labels in sidebar & topbar
   function updateProfileUI() {
     const user = state.currentUser;
     const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
@@ -114,7 +112,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('sidebarUserRole').textContent = roleLabel;
 
-    // Greeting & Eyebrow
     const greetingEl = document.getElementById('greeting');
     const subtleEl = document.getElementById('heroSubtle');
     const navTicketsLabel = document.getElementById('navTicketsLabel');
@@ -133,12 +130,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       navTicketsLabel.textContent = `All Requests`;
     }
 
-    // Active count on nav
     const activeCount = state.tickets.filter(t => t.status !== 'Resolved' && t.status !== 'Closed').length;
     document.getElementById('navCount').textContent = activeCount;
   }
 
-  // Render Stat KPI Cards
   function renderStats() {
     const relevantTickets = getRoleScopedTickets();
     const active = relevantTickets.filter(t => t.status === 'Open' || t.status === 'Assigned').length;
@@ -149,7 +144,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('statProgress').textContent = progress;
     document.getElementById('statResolved').textContent = resolved;
 
-    // Dynamic next technician visit
     const activeWithTech = relevantTickets.find(t => t.status === 'In_Progress' || t.status === 'Assigned');
     if (activeWithTech) {
       document.getElementById('statNextAction').textContent = `Today · 5:30 PM`;
@@ -160,7 +154,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Category Icon Helper
   function getCategoryIcon(cat) {
     switch (cat) {
       case 'Plumbing': return '💧';
@@ -181,71 +174,64 @@ document.addEventListener('DOMContentLoaded', async () => {
     return state.tickets;
   }
 
-  // Render Dashboard Left Panel: Requests in Motion
   function renderAttentionList() {
     const container = document.getElementById('attentionList');
     const relevant = getRoleScopedTickets().filter(t => t.status !== 'Resolved' && t.status !== 'Closed');
 
     if (relevant.length === 0) {
       container.innerHTML = `
-        <div style="text-align: center; padding: 28px 12px; color: var(--muted);">
-          <strong style="display:block; font-size:14px; color:var(--foreground);">No requests in motion 🎉</strong>
-          <span style="font-size:12px;">All reported maintenance tasks are currently resolved.</span>
+        <div style="text-align:center; padding:32px 14px; color:var(--muted);">
+          <strong>Everything is resolved!</strong>
+          <p style="font-size:12px; margin-top:4px;">No pending maintenance issues.</p>
         </div>
       `;
       return;
     }
 
     container.innerHTML = relevant.slice(0, 4).map(t => {
-      const statusClass = t.status === 'In_Progress' ? 'progress' : t.status === 'Assigned' ? 'open' : 'open';
+      const statusClass = t.status === 'In_Progress' ? 'progress' : t.status === 'Assigned' ? 'progress' : 'open';
       const statusText = t.status === 'In_Progress' ? 'In progress' : t.status === 'Assigned' ? 'Assigned' : 'Open';
-      const priorityTag = t.priority === 'Emergency' ? '<span class="priority-tag emergency">🚨 Emergency</span>' : (t.priority === 'High' ? '<span class="priority-tag high">⚠️ High</span>' : '');
+      const priorityClass = t.priority === 'Emergency' ? 'emergency' : t.priority === 'High' ? 'high' : '';
 
       return `
         <div class="ticket-item" onclick="window.openDetailModal(${t.id})">
           <div class="ticket-icon">${getCategoryIcon(t.category)}</div>
           <div class="ticket-main">
-            <strong>${t.title} ${priorityTag}</strong>
-            <span>${t.unit} · ${t.category}</span>
+            <strong>${t.title}</strong>
+            <span>${t.unit} · ${t.category} ${priorityClass ? `<span class="priority-tag ${priorityClass}">${t.priority}</span>` : ''}</span>
             <small>${t.assigned_to_name ? `Assigned: ${t.assigned_to_name}` : 'Awaiting assignment'}</small>
           </div>
-          <div style="text-align: right;">
+          <div>
             <span class="status ${statusClass}">${statusText}</span>
-            <span style="display:block; font-size:10px; color:var(--muted); font-family:var(--font-mono); margin-top:4px;">${t.ticket_number}</span>
           </div>
         </div>
       `;
     }).join('');
   }
 
-  // Render Dashboard Right Panel: Live Visibility
   function renderFeaturedUpdate() {
     const featured = state.tickets.find(t => t.status === 'In_Progress') || state.tickets[0];
     if (!featured) return;
 
-    document.getElementById('featuredIcon').textContent = getCategoryIcon(featured.category);
     document.getElementById('featuredTitle').textContent = featured.title;
-    document.getElementById('featuredTime').textContent = featured.updated_at ? featured.updated_at.split(' ')[1] : 'Today';
+    document.getElementById('featuredIcon').textContent = getCategoryIcon(featured.category);
     document.getElementById('featuredAssignee').innerHTML = featured.assigned_to_name 
-      ? `Assigned to <b>${featured.assigned_to_name} · ${featured.category}</b>`
-      : `Status: <b>Awaiting technician assignment</b>`;
+      ? `Assigned to <b>${featured.assigned_to_name} · ${featured.category}</b>` 
+      : `Status: <b>Awaiting technician dispatch</b>`;
 
-    const progressWidth = featured.status === 'Resolved' ? '100%' : featured.status === 'In_Progress' ? '70%' : featured.status === 'Assigned' ? '40%' : '15%';
-    document.getElementById('featuredProgress').style.width = progressWidth;
-    document.getElementById('featuredStatusText').textContent = featured.technician_notes 
-      ? `Fix note: ${featured.technician_notes}`
-      : `Unit ${featured.unit} · Priority: ${featured.priority}`;
+    const statusProgressMap = { Open: '25%', Assigned: '50%', In_Progress: '75%', Resolved: '100%' };
+    document.getElementById('featuredProgress').style.width = statusProgressMap[featured.status] || '40%';
+    document.getElementById('featuredStatusText').textContent = `Status: ${featured.status.replace('_', ' ')} · ${featured.unit}`;
 
-    // Mini Stepper
     const step = featured.status === 'Open' ? 1 : featured.status === 'Assigned' ? 2 : featured.status === 'In_Progress' ? 3 : 4;
     document.getElementById('featuredMiniTimeline').innerHTML = `
-      <div class="timeline-step ${step >= 1 ? (step === 1 ? 'current' : 'done') : ''}">
-        <span>${step > 1 ? '✓' : '1'}</span>
-        <div><strong>Reported</strong><small>${featured.created_at.split(' ')[1] || 'Morning'}</small></div>
+      <div class="timeline-step ${step >= 1 ? 'done' : ''}">
+        <span>✓</span>
+        <div><strong>Reported</strong><small>${featured.created_at.slice(11, 16) || 'Logged'}</small></div>
       </div>
       <div class="timeline-step ${step >= 2 ? (step === 2 ? 'current' : 'done') : ''}">
-        <span>${step > 2 ? '✓' : '2'}</span>
-        <div><strong>Assigned</strong><small>${featured.assigned_to_name || 'Staff'}</small></div>
+        <span>${step >= 2 ? '✓' : '2'}</span>
+        <div><strong>Assigned</strong><small>${featured.assigned_to_name || 'Pending'}</small></div>
       </div>
       <div class="timeline-step ${step >= 3 ? (step === 3 ? 'current' : 'done') : ''}">
         <span>${step > 3 ? '✓' : '3'}</span>
@@ -258,12 +244,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
   }
 
-  // Render Request Center (View 2)
   function renderTicketsView() {
     const container = document.getElementById('fullTicketList');
     let list = getRoleScopedTickets();
 
-    // Filter selection
     if (state.listFilter === 'open') {
       list = list.filter(t => t.status === 'Open' || t.status === 'Assigned');
     } else if (state.listFilter === 'progress') {
@@ -272,7 +256,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       list = list.filter(t => t.status === 'Resolved' || t.status === 'Closed');
     }
 
-    // Search query
     if (state.searchQuery) {
       const q = state.searchQuery.toLowerCase();
       list = list.filter(t => 
@@ -318,10 +301,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }).join('');
   }
 
-  // Render Activity Trail (View 3)
   async function renderActivityView() {
     const container = document.getElementById('activityList');
-    // Gather logs from tickets
     let allLogs = [];
     for (const t of state.tickets) {
       const full = await DB.getTicketById(t.id);
@@ -348,7 +329,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     `).join('');
   }
 
-  // --- 6. NAVIGATION & TAB SWITCHING --- //
+  // --- 6. NAVIGATION & TABS --- //
   document.querySelectorAll('.nav-item[data-view]').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.nav-item[data-view]').forEach(b => b.classList.remove('active'));
@@ -366,7 +347,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Stat card filter quick-switch
   document.querySelectorAll('.stat-card[data-filter]').forEach(card => {
     card.addEventListener('click', () => {
       const filter = card.getAttribute('data-filter');
@@ -442,7 +422,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (e.target === modalBackdrop) closeModal();
   });
 
-  // Report Issue Modal
   function showReportModal() {
     const user = state.currentUser;
     const defaultUnit = user.unit || 'Unit 402';
@@ -460,24 +439,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
 
             <div class="field">
-              <label for="modalCategory">Category *</label>
-              <select id="modalCategory" required>
-                <option value="Plumbing">💧 Plumbing</option>
-                <option value="Electrical">⚡ Electrical</option>
-                <option value="HVAC">❄️ HVAC / AC</option>
-                <option value="Carpentry">🔨 Carpentry</option>
-                <option value="Appliance">🔌 Appliance</option>
-                <option value="General">🛠️ General</option>
+              <label for="modalCategory">Category</label>
+              <select id="modalCategory">
+                <option value="Plumbing">Plumbing &amp; Water</option>
+                <option value="Electrical">Electrical &amp; Power</option>
+                <option value="HVAC">HVAC &amp; Air Conditioning</option>
+                <option value="Carpentry">Carpentry &amp; Fixtures</option>
+                <option value="General">General Maintenance</option>
               </select>
             </div>
 
             <div class="field">
-              <label for="modalUnit">Apartment / Unit *</label>
-              <input id="modalUnit" value="${defaultUnit}" required>
+              <label for="modalUnit">Apartment / Unit</label>
+              <input id="modalUnit" value="${defaultUnit}">
             </div>
 
             <div class="field full">
-              <label>Priority level *</label>
+              <label>Priority level</label>
               <div class="priority-row">
                 <div class="priority-option">
                   <input type="radio" name="priority" id="p1" value="Low">
@@ -493,7 +471,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
                 <div class="priority-option">
                   <input type="radio" name="priority" id="p4" value="Emergency">
-                  <label for="p4" style="color:var(--destructive)">🚨 Emergency</label>
+                  <label for="p4" style="color:var(--destructive)">Emergency</label>
                 </div>
               </div>
             </div>
@@ -541,7 +519,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('reportBtn').addEventListener('click', showReportModal);
   document.getElementById('reportBtn2').addEventListener('click', showReportModal);
 
-  // Detail Modal
   window.openDetailModal = async function(ticketId) {
     state.activeTicketId = ticketId;
     const ticket = await DB.getTicketById(ticketId);
@@ -600,7 +577,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
         ` : ''}
 
-        <!-- Progress Steps -->
         <div class="timeline-mini" style="padding:10px 0;">
           <div class="timeline-step ${step >= 1 ? 'done' : ''}">
             <span>✓</span><div><strong>Reported</strong><small>${ticket.created_at}</small></div>
@@ -616,7 +592,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
         </div>
 
-        <!-- Role Action Area -->
         ${isStaffOrManager ? `
           <div class="staff-controls">
             <label>Staff &amp; Manager Controls</label>
@@ -641,11 +616,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
         ` : ''}
 
-        <!-- Comment / Activity Note -->
         <div style="margin-top:20px; border-top:1px solid var(--line); padding-top:15px;">
           <label style="font-size:11px; font-weight:700; display:block; margin-bottom:6px;">Add note to audit trail</label>
           <div style="display:flex; gap:8px;">
-            <input id="detailNewNote" style="flex:1; border:1px solid var(--border); background:var(--background); border-radius:var(--radius); padding:8px 12px; font-size:12px;" placeholder="Add an update note...">
+            <input id="detailNewNote" style="flex:1; border:1px solid var(--border); background:var(--input); border-radius:var(--radius); padding:8px 12px; font-size:12px;" placeholder="Add an update note...">
             <button class="secondary-btn" onclick="window.postDetailNote(${ticket.id})">Post</button>
           </div>
         </div>
@@ -655,7 +629,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     openModal(html);
   };
 
-  // Actions on Ticket
   window.updateStatus = async function(ticketId, status) {
     await DB.updateTicket(ticketId, {
       status,
@@ -816,7 +789,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `maintenance_db_export_${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `maintenance_db_jatin_${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
       showToast('Database Exported', 'Downloaded backup JSON.');
@@ -834,7 +807,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // --- 11. SIDEBAR TOGGLE & COLLAPSE CONTROLS --- //
+  // --- 11. SIDEBAR CONTROLS --- //
   const appShell = document.getElementById('appShell');
   const sidebar = document.getElementById('sidebar');
   const openSidebar = document.getElementById('openSidebar');
@@ -861,7 +834,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (sidebarCloseBtn) sidebarCloseBtn.addEventListener('click', closeSidebar);
   if (mobileMenuClose) mobileMenuClose.addEventListener('click', closeSidebar);
 
-  // --- 12. TOP ACTIONS (NOTIFICATIONS & AVATAR) --- //
+  // Top Actions
   const notifBtn = document.getElementById('notifBtn');
   if (notifBtn) {
     notifBtn.addEventListener('click', () => {
@@ -876,27 +849,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // --- 13. BUTTON CLICK RIPPLE ANIMATIONS --- //
-  function initButtonAnimations() {
-    document.addEventListener('click', (e) => {
-      const btn = e.target.closest('button, .primary-btn, .secondary-btn, .icon-btn, .filter, .stat-card, .nav-item, .sidebar-toggle-btn');
-      if (!btn) return;
+  // Button Ripple Animations
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button, .primary-btn, .secondary-btn, .icon-btn, .filter, .stat-card, .nav-item, .sidebar-toggle-btn');
+    if (!btn) return;
 
-      const rect = btn.getBoundingClientRect();
-      const ripple = document.createElement('span');
-      ripple.className = 'btn-ripple';
-      const size = Math.max(rect.width, rect.height);
-      ripple.style.width = ripple.style.height = `${size}px`;
-      ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
-      ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+    const rect = btn.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    ripple.className = 'btn-ripple';
+    const size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = `${size}px`;
+    ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+    ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
 
-      btn.appendChild(ripple);
-      setTimeout(() => ripple.remove(), 600);
-    });
-  }
-  initButtonAnimations();
+    btn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+  });
 
-  // --- 14. INTERACTIVE BACKGROUND (MULTI-STYLE ENGINE · CONTOURS DEFAULT) --- //
+  // --- 12. FULLY SUBTLE BACKGROUND CANVAS ENGINE --- //
   function initInteractiveBackground() {
     const canvas = document.getElementById('bg-canvas');
     if (!canvas) return;
@@ -925,18 +895,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.addEventListener('pointerleave', () => {
       mouse.active = false;
     });
-    window.addEventListener('touchmove', (e) => {
-      if (e.touches && e.touches[0]) {
-        mouse.x = e.touches[0].clientX;
-        mouse.y = e.touches[0].clientY;
-        mouse.active = true;
-      }
-    }, { passive: true });
-    window.addEventListener('touchend', () => {
-      mouse.active = false;
-    });
 
-    // Ripple waves triggered on click
     const waves = [];
     window.addEventListener('click', (e) => {
       waves.push({
@@ -950,25 +909,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     });
 
-    // Background style selection
     const bgStyleSelect = document.getElementById('bgStyleSelect');
-    let currentStyle = localStorage.getItem('ff_bg_style') || 'subtle-waves';
+    let currentStyle = localStorage.getItem('jatin_bg_style') || 'subtle-waves';
     if (bgStyleSelect) {
-      // Map legacy names if present
-      if (currentStyle === 'contours') currentStyle = 'subtle-waves';
-      if (currentStyle === 'blueprint') currentStyle = 'subtle-grid';
-      if (currentStyle === 'geometric') currentStyle = 'subtle-mesh';
       bgStyleSelect.value = currentStyle;
       bgStyleSelect.addEventListener('change', (e) => {
         currentStyle = e.target.value;
-        localStorage.setItem('ff_bg_style', currentStyle);
+        localStorage.setItem('jatin_bg_style', currentStyle);
         showToast('Background Style', `Switched to ${e.target.options[e.target.selectedIndex].text}`);
       });
     }
 
-    // ==========================================
-    // DESIGN 1: SUBTLE FLOWING SILK WAVES
-    // ==========================================
     const CONTOUR_COUNT = 7;
     const CONTOUR_POINTS = 28;
 
@@ -989,7 +940,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           let by = yBase + Math.sin(time * freq + j * 0.25 + phase) * baseAmp
                          + Math.cos(time * (freq * 0.55) + j * 0.14) * (baseAmp * 0.35);
 
-          // Cursor subtle elastic deflection
           if (mouse.active) {
             const dx = bx - mouse.x;
             const dy = by - mouse.y;
@@ -1000,7 +950,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
           }
 
-          // Subtle click ripple wave
           for (const wave of waves) {
             const dx = bx - wave.x;
             const dy = by - wave.y;
@@ -1026,7 +975,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         ctx.strokeStyle = `rgba(${scheeleRgb}, ${opacity})`;
         ctx.stroke();
 
-        // Subtle micro-nodes along contours
         if (i % 2 === 1) {
           const markerX = ((i * 180 + time * 0.015) % (width - 120)) + 60;
           const markerY = yBase + Math.sin(time * freq + (markerX / width) * 5.0 + phase) * baseAmp;
@@ -1038,9 +986,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // ==========================================
-    // DESIGN 2: DELICATE CAD MATRIX GRID
-    // ==========================================
     const SPACING = 38;
     function renderSubtleGrid(scheeleRgb, isDark) {
       const defaultDotColor = isDark ? 'rgba(235, 235, 235, 0.08)' : 'rgba(30, 30, 30, 0.06)';
@@ -1068,21 +1013,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
           }
 
-          for (const wave of waves) {
-            const dx = bx - wave.x;
-            const dy = by - wave.y;
-            const dist = Math.hypot(dx, dy);
-            const waveDiff = dist - wave.radius;
-            if (Math.abs(waveDiff) < 45) {
-              const waveRatio = Math.cos((waveDiff / 45) * Math.PI * 0.5);
-              if (dist > 0) {
-                px += (dx / dist) * waveRatio * (wave.amplitude * 0.4);
-                py += (dy / dist) * waveRatio * (wave.amplitude * 0.4);
-              }
-              intensity += (wave.amplitude / 25) * Math.max(0, waveRatio);
-            }
-          }
-
           const isMajorNode = (c % 4 === 0 && r % 4 === 0);
 
           if (intensity > 0.05) {
@@ -1096,7 +1026,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               ctx.lineWidth = 0.8;
               ctx.beginPath();
               ctx.moveTo(px - 3, py); ctx.lineTo(px + 3, py);
-              ctx.moveTo(px, py - 3); ctx.lineTo(px, py + 3);
+              ctx.moveTo(px, py - 3); ctx.lineTo(px + 3, py);
               ctx.stroke();
             }
           } else if (isMajorNode) {
@@ -1104,7 +1034,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             ctx.lineWidth = 0.6;
             ctx.beginPath();
             ctx.moveTo(px - 2.5, py); ctx.lineTo(px + 2.5, py);
-            ctx.moveTo(px, py - 2.5); ctx.lineTo(px, py + 2.5);
+            ctx.moveTo(px, py - 2.5); ctx.lineTo(px + 2.5, py);
             ctx.stroke();
           } else {
             ctx.fillStyle = defaultDotColor;
@@ -1114,9 +1044,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // ==========================================
-    // DESIGN 3: SOFT CONSTELLATION / PARTICLES
-    // ==========================================
     const particles = Array.from({ length: 36 }, () => ({
       x: Math.random() * (width || 1200),
       y: Math.random() * (height || 800),
@@ -1138,13 +1065,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (p.y < 0) p.y = height;
         if (p.y > height) p.y = 0;
 
-        // Draw particle
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(${scheeleRgb}, ${isDark ? 0.22 : 0.16})`;
         ctx.fill();
 
-        // Connect nearby particles
         for (let j = i + 1; j < particles.length; j++) {
           const p2 = particles[j];
           const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
@@ -1157,7 +1082,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         }
 
-        // Link with cursor
         if (mouse.active) {
           const mDist = Math.hypot(p.x - mouse.x, p.y - mouse.y);
           if (mDist < 120) {
@@ -1171,9 +1095,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // ==========================================
-    // DESIGN 4: MINIMAL AMBIENT AURA
-    // ==========================================
     function renderMinimalAura(scheeleRgb, isDark) {
       const grad = ctx.createRadialGradient(width / 2, height / 2, 50, width / 2, height / 2, Math.max(width, height) * 0.6);
       grad.addColorStop(0, `rgba(${scheeleRgb}, ${isDark ? 0.04 : 0.025})`);
@@ -1182,13 +1103,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       ctx.fillRect(0, 0, width, height);
     }
 
-    // Main animation loop
     function mainLoop(time) {
       ctx.clearRect(0, 0, width, height);
       const isDark = document.body.classList.contains('dark');
       const scheeleRgb = isDark ? '93, 178, 0' : '68, 128, 0';
 
-      // Subtle click shockwaves
       for (let w = waves.length - 1; w >= 0; w--) {
         const wave = waves[w];
         wave.radius += wave.speed;
@@ -1204,18 +1123,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         ctx.stroke();
       }
 
-      // Render the active subtle background design
-      if (currentStyle === 'subtle-waves' || currentStyle === 'contours') {
+      if (currentStyle === 'subtle-waves') {
         renderSubtleWaves(scheeleRgb, isDark, time);
-      } else if (currentStyle === 'subtle-grid' || currentStyle === 'blueprint') {
+      } else if (currentStyle === 'subtle-grid') {
         renderSubtleGrid(scheeleRgb, isDark);
-      } else if (currentStyle === 'subtle-mesh' || currentStyle === 'geometric') {
-        renderSubtleMesh(scheeleRgb, isDark, time);
-      } else if (currentStyle === 'minimal' || currentStyle === 'minimal-aura') {
+      } else if (currentStyle === 'subtle-mesh') {
+        renderSubtleMesh(scheeleRgb, isDark);
+      } else if (currentStyle === 'minimal') {
         renderMinimalAura(scheeleRgb, isDark);
       }
 
-      // Subtle cursor reticle
       if (mouse.active) {
         ctx.save();
         ctx.beginPath();
@@ -1237,6 +1154,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   initInteractiveBackground();
 
-  // Initial load
+  // Initial Data Load
   await reloadData();
 });

@@ -63,6 +63,72 @@ def test_api_server():
             assert data["total"] >= 5
         print("[PASS] /api/stats test passed!")
 
+        # Test /api/activity
+        with urllib.request.urlopen("http://127.0.0.1:8765/api/activity") as res:
+            assert res.status == 200
+            data = json.loads(res.read().decode())
+            assert "logs" in data
+            assert len(data["logs"]) >= 1
+        print("[PASS] /api/activity test passed!")
+
+        # Test /api/export
+        with urllib.request.urlopen("http://127.0.0.1:8765/api/export") as res:
+            assert res.status == 200
+            data = json.loads(res.read().decode())
+            assert "users" in data
+            assert "tickets" in data
+            assert "logs" in data
+        print("[PASS] /api/export test passed!")
+
+        # Test POST /api/tickets
+        new_ticket_req = urllib.request.Request(
+            "http://127.0.0.1:8765/api/tickets",
+            data=json.dumps({
+                "title": "Automated Test Request",
+                "description": "Checking system endpoint directly",
+                "category": "Plumbing",
+                "priority": "High",
+                "unit": "Unit 999",
+                "created_by_user_id": 1,
+                "created_by_name": "Aarav Mehta"
+            }).encode(),
+            headers={"Content-Type": "application/json"},
+            method="POST"
+        )
+        with urllib.request.urlopen(new_ticket_req) as res:
+            assert res.status == 201
+            created = json.loads(res.read().decode())["ticket"]
+            created_id = created["id"]
+            assert created["title"] == "Automated Test Request"
+        print("[PASS] POST /api/tickets test passed!")
+
+        # Test PUT /api/tickets/<id>
+        update_req = urllib.request.Request(
+            f"http://127.0.0.1:8765/api/tickets/{created_id}",
+            data=json.dumps({
+                "status": "In_Progress",
+                "log_action": "Test Update",
+                "log_user": "Tester",
+                "log_note": "Starting test work"
+            }).encode(),
+            headers={"Content-Type": "application/json"},
+            method="PUT"
+        )
+        with urllib.request.urlopen(update_req) as res:
+            assert res.status == 200
+            updated = json.loads(res.read().decode())["ticket"]
+            assert updated["status"] == "In_Progress"
+        print("[PASS] PUT /api/tickets/<id> test passed!")
+
+        # Clean up created test ticket
+        del_req = urllib.request.Request(
+            f"http://127.0.0.1:8765/api/tickets/{created_id}",
+            method="DELETE"
+        )
+        with urllib.request.urlopen(del_req) as res:
+            assert res.status == 200
+        print("[PASS] DELETE /api/tickets/<id> test passed!")
+
     finally:
         server.shutdown()
         server.server_close()

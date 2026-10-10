@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FixFlow — Apartment Maintenance OS</title>
+  <title>FixFlow — Apartment Maintenance OS (Jatin Edition)</title>
   <meta name="description" content="Working UX prototype for apartment maintenance reporting, tracking, and accountability." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,10 +11,9 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Interactive Background (Canvas & Cursor Follower, No Tint Blobs) -->
+  <!-- Ambient Subtle Background -->
   <div id="ambient-bg">
     <canvas id="bg-canvas"></canvas>
-    <div id="cursor-glow"></div>
   </div>
 
   <div class="app-shell" id="appShell">
@@ -25,7 +24,7 @@
           <div class="brand-mark">F</div>
           <div>
             <strong>FixFlow</strong>
-            <span>Maintenance OS</span>
+            <span>Jatin Edition</span>
           </div>
         </div>
         <!-- Sidebar Close / Collapse Button -->
@@ -37,7 +36,7 @@
         <label for="roleSelect">View as</label>
         <select id="roleSelect">
           <option value="resident" selected>Resident · Aarav Mehta</option>
-          <option value="staff">Maintenance Staff · Suresh / Rajesh</option>
+          <option value="staff">Maintenance Staff · Suresh Patil</option>
           <option value="manager">Society Manager · Priya Sharma</option>
         </select>
       </div>
@@ -53,7 +52,10 @@
         <button class="nav-item" data-view="activity">
           <span>↻</span> Activity Trail
         </button>
-        <a href="../index.html" class="nav-item back-study-link" style="text-decoration:none; margin-top: 10px;">
+        <a href="../himanshu/index.html" class="nav-item back-study-link" style="text-decoration:none; margin-top: 10px;">
+          <span>⇄</span> Himanshu App
+        </a>
+        <a href="../index.html" class="nav-item back-study-link" style="text-decoration:none;">
           <span>←</span> Case Study
         </a>
       </nav>
@@ -137,7 +139,7 @@
         <div class="view active" id="view-dashboard">
           <div class="hero-row">
             <div>
-              <p class="eyebrow" id="heroDate">SUNDAY · OCTOBER 4, 2026</p>
+              <p class="eyebrow" id="heroDate">TODAY · REAL-TIME DISPATCH</p>
               <h1 id="greeting">Good afternoon, Aarav.</h1>
               <p class="subtle" id="heroSubtle">Report it once. Track it all the way to fixed.</p>
             </div>
@@ -291,10 +293,6 @@
       </section>
     </main>
   </div>
-
-  <!-- ============================================== -->
-  <!-- MODALS                                         -->
-  <!-- ============================================== -->
 
   <!-- Universal Modal Backdrop -->
   <div class="modal-backdrop" id="modalBackdrop" hidden>
