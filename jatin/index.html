@@ -3,294 +3,189 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FixFlow — Apartment Maintenance OS (Jatin Edition)</title>
-  <meta name="description" content="Working UX prototype for apartment maintenance reporting, tracking, and accountability." />
+  <title>FixFlow OS — Independent Apartment Maintenance System</title>
+  <meta name="description" content="Independent, full-featured apartment maintenance operations platform with real-time tracking, live dispatch, and audit trails." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;1,600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Ambient Subtle Background -->
+  <!-- Ambient Interactive Canvas Background -->
   <div id="ambient-bg">
     <canvas id="bg-canvas"></canvas>
   </div>
 
-  <div class="app-shell" id="appShell">
-    <!-- LEFT SIDEBAR -->
-    <aside class="sidebar" id="sidebar">
-      <div class="brand">
-        <div class="brand-left">
-          <div class="brand-mark">F</div>
-          <div>
-            <strong>FixFlow</strong>
-            <span>Jatin Edition</span>
-          </div>
+  <div class="exec-container">
+    <!-- TOP EXECUTIVE COMMAND BAR -->
+    <header class="exec-header">
+      <!-- Brand & Standalone Badge -->
+      <div class="exec-brand-group">
+        <div class="exec-brand-mark">✦</div>
+        <div class="exec-brand-text">
+          <strong>FixFlow OS</strong>
+          <span>Independent Edition</span>
         </div>
-        <!-- Sidebar Close / Collapse Button -->
-        <button class="sidebar-toggle-btn" id="sidebarCloseBtn" title="Close / Collapse Sidebar" aria-label="Close sidebar">✕</button>
+        <!-- Great Badges: Independent Flag & Database Status -->
+        <span class="grate-badge grate-badge-pink grate-badge-pulse" title="100% Standalone Self-Contained Frontend & Backend">
+          <span class="grate-badge-dot"></span>✦ Independent OS
+        </span>
+        <div id="db-status" class="grate-badge grate-badge-db" title="Active database engine">
+          <span class="grate-badge-dot"></span>
+          <span id="db-status-text">Detecting DB...</span>
+        </div>
       </div>
 
-      <!-- Role Switcher -->
-      <div class="role-switcher">
-        <label for="roleSelect">View as</label>
-        <select id="roleSelect">
-          <option value="resident" selected>Resident · Aarav Mehta</option>
-          <option value="staff">Maintenance Staff · Suresh Patil</option>
-          <option value="manager">Society Manager · Priya Sharma</option>
-        </select>
-      </div>
-
-      <!-- Sidebar Navigation -->
-      <nav class="nav" aria-label="Primary">
-        <button class="nav-item active" data-view="dashboard">
-          <span>⌂</span> Dashboard
+      <!-- Center Executive Navigation Segmented Pills -->
+      <nav class="exec-nav-group" aria-label="Executive Navigation">
+        <button class="exec-nav-pill active" data-view="dashboard">
+          <span>⌂</span> Executive Board
         </button>
-        <button class="nav-item" data-view="tickets">
-          <span>✓</span> <span id="navTicketsLabel">My Requests</span> <b id="navCount">0</b>
+        <button class="exec-nav-pill" data-view="tickets">
+          <span>📋</span> Work Orders <b id="navCount">0</b>
         </button>
-        <button class="nav-item" data-view="activity">
-          <span>↻</span> Activity Trail
+        <button class="exec-nav-pill" data-view="activity">
+          <span>↻</span> Audit &amp; SLA Trail
         </button>
-        <a href="../himanshu/index.html" class="nav-item back-study-link" style="text-decoration:none; margin-top: 10px;">
-          <span>⇄</span> Himanshu App
-        </a>
-        <a href="../index.html" class="nav-item back-study-link" style="text-decoration:none;">
-          <span>←</span> Case Study
-        </a>
       </nav>
 
-      <!-- Sidebar Bottom Info -->
-      <div class="sidebar-bottom">
-        <div class="trust-card">
-          <div class="trust-icon">✓</div>
-          <div>
-            <strong>One clear trail</strong>
-            <p>Every request has an owner, status, and visible next action.</p>
-          </div>
+      <!-- Right Action Controls -->
+      <div class="exec-actions">
+        <!-- Persona Switcher -->
+        <div class="role-badge-select" title="Switch Operating Persona">
+          <span>👤</span>
+          <select id="roleSelect" aria-label="Switch Persona">
+            <option value="resident" selected>Resident · Aarav Mehta</option>
+            <option value="staff">Staff · Suresh Patil</option>
+            <option value="manager">Manager · Priya Sharma</option>
+          </select>
         </div>
 
-        <div class="user-mini">
-          <div class="avatar" id="sidebarAvatar">AM</div>
-          <div style="flex:1;">
-            <strong id="sidebarUserName">Aarav Mehta</strong>
-            <span id="sidebarUserRole">Unit 402 · Resident</span>
-          </div>
-          <button id="mobileMenuClose" class="icon-btn mobile-only" aria-label="Close menu">×</button>
+        <!-- Ambient Background Selector -->
+        <div class="bg-select-box" title="Switch Ambient Background">
+          <span>🎨</span>
+          <select id="bgStyleSelect" aria-label="Background Design">
+            <option value="subtle-waves" selected>Pink Waves</option>
+            <option value="subtle-grid">Pink Grid</option>
+            <option value="subtle-mesh">Constellation</option>
+            <option value="minimal">Minimal Aura</option>
+          </select>
+        </div>
+
+        <!-- Quick Database Controls -->
+        <button class="icon-btn" id="btn-export-db" title="Export SQLite / LocalStorage Database as JSON">💾</button>
+        <button class="icon-btn" id="btn-reset-db" title="Reset Database to Clean Sample State">↺</button>
+        <button class="icon-btn" id="theme-toggle" title="Toggle Light/Dark Theme">🌙</button>
+        <button class="icon-btn" id="notifBtn" title="Active System Health">🔔</button>
+
+        <!-- New Request Button -->
+        <button class="primary-btn" id="reportBtn"><span>＋</span> Report Issue</button>
+      </div>
+    </header>
+
+    <!-- KPI & SLA HORIZONTAL METRIC RIBBON -->
+    <section class="exec-kpi-ribbon" aria-label="Key Performance Indicators">
+      <div class="kpi-card" data-filter="active">
+        <div class="kpi-header">
+          <span class="kpi-title">Active Requests</span>
+          <span class="grate-badge grate-badge-emergency"><span class="grate-badge-dot"></span>Urgent</span>
+        </div>
+        <div class="kpi-value" id="statActive">0</div>
+        <div class="kpi-sub">Needs attention &amp; dispatch</div>
+      </div>
+
+      <div class="kpi-card" data-filter="progress">
+        <div class="kpi-header">
+          <span class="kpi-title">In Progress</span>
+          <span class="grate-badge grate-badge-progress"><span class="grate-badge-dot"></span>Active</span>
+        </div>
+        <div class="kpi-value" id="statProgress">0</div>
+        <div class="kpi-sub">Staff on-site repairing</div>
+      </div>
+
+      <div class="kpi-card" data-filter="resolved">
+        <div class="kpi-header">
+          <span class="kpi-title">Resolved &amp; Verified</span>
+          <span class="grate-badge grate-badge-resolved"><span class="grate-badge-dot"></span>Closed</span>
+        </div>
+        <div class="kpi-value" id="statResolved">0</div>
+        <div class="kpi-sub">100% verified resolution</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Next Scheduled Action</span>
+          <span class="grate-badge grate-badge-pink"><span class="grate-badge-dot"></span>SLA Target</span>
+        </div>
+        <div class="kpi-value" style="font-size: 1.45rem; padding-top: 4px;" id="statNextAction">Today · 5:30 PM</div>
+        <div class="kpi-sub" id="statNextActionSub">Plumbing check · Unit 402</div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- VIEW 1 & 2: REARRANGED SPLIT WORKSPACE          -->
+    <!-- ============================================== -->
+    <main class="exec-main">
+      <div class="view active" id="view-dashboard">
+        <div class="exec-workspace">
+          <!-- LEFT COLUMN: REQUEST QUEUE & STREAM -->
+          <section class="exec-feed-pane">
+            <div class="feed-toolbar">
+              <div class="search-box">
+                <span>⌕</span>
+                <input id="searchInput" type="search" placeholder="Search requests, units, categories, or IDs…">
+              </div>
+              <div class="filter-chip-row" id="filterButtons">
+                <button class="filter-chip active" data-list-filter="all">All Requests</button>
+                <button class="filter-chip" data-list-filter="open">⚡ Open / Assigned</button>
+                <button class="filter-chip" data-list-filter="progress">● In Progress</button>
+                <button class="filter-chip" data-list-filter="resolved">✓ Resolved</button>
+              </div>
+            </div>
+
+            <!-- Ticket Feed List -->
+            <div id="attentionList" class="ticket-feed-list">
+              <!-- Dynamically injected ticket cards with Great Badges -->
+            </div>
+          </section>
+
+          <!-- RIGHT COLUMN: LIVE INSPECTOR & RESOLUTION LAB -->
+          <aside class="exec-inspector-pane glowing-lab" id="inspectorPane">
+            <div id="inspectorContent">
+              <!-- Dynamically updated when any ticket is clicked -->
+            </div>
+          </aside>
         </div>
       </div>
-    </aside>
 
-    <!-- MAIN APP CANVAS -->
-    <main class="main">
-      <!-- TOPBAR -->
-      <header class="topbar">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <!-- Desktop & Mobile Sidebar Toggle -->
-          <button class="icon-btn sidebar-trigger-btn" id="openSidebar" title="Toggle Sidebar" aria-label="Toggle Sidebar">☰</button>
-          <div class="breadcrumb">
-            <span>Greenview Heights</span>
-            <i>/</i>
-            <strong id="pageTitle">Dashboard</strong>
+      <!-- VIEW 2: WORK ORDERS LIST (Full feed table alternative) -->
+      <div class="view" id="view-tickets" style="display:none;">
+        <div class="feed-toolbar" style="margin-bottom: 16px;">
+          <div class="search-box">
+            <span>⌕</span>
+            <input id="searchInput2" type="search" placeholder="Quick filter work orders…">
           </div>
         </div>
-
-        <div class="top-actions">
-          <!-- Database Mode Pill -->
-          <div id="db-status" class="db-pill" title="Database status">
-            <span class="status-dot"></span>
-            <span id="db-status-text">Detecting DB...</span>
-          </div>
-
-          <!-- Background Design Selector -->
-          <div class="bg-style-pill" title="Switch Background Design">
-            <span style="font-size:12px;">🎨</span>
-            <select id="bgStyleSelect" aria-label="Background Design">
-              <option value="subtle-waves" selected>Subtle Waves</option>
-              <option value="subtle-grid">Delicate Grid</option>
-              <option value="subtle-mesh">Soft Constellation</option>
-              <option value="minimal">Minimal Aura</option>
-            </select>
-          </div>
-
-          <!-- Quick Database Controls -->
-          <button class="icon-btn animated-btn" id="btn-export-db" title="Export SQLite / LocalStorage Database as JSON">💾</button>
-          <button class="icon-btn animated-btn" id="btn-reset-db" title="Reset Database to Clean Sample State">↺</button>
-
-          <!-- Theme Toggle Button -->
-          <button id="theme-toggle" class="icon-btn animated-btn" title="Toggle Light/Dark Theme">🌙</button>
-
-          <!-- Notification Bell -->
-          <button class="notif-btn animated-btn" id="notifBtn" aria-label="Notifications" title="Live updates active">
-            🔔<span></span>
-          </button>
-
-          <!-- Top Profile Avatar -->
-          <button class="avatar top-avatar" id="topAvatar">AM</button>
+        <div id="fullTicketList" class="ticket-feed-list">
+          <!-- Dynamically injected -->
         </div>
-      </header>
+      </div>
 
-      <!-- MAIN VIEWS CONTAINER -->
-      <section class="content" id="appContent">
-
-        <!-- ============================================== -->
-        <!-- VIEW 1: DASHBOARD                              -->
-        <!-- ============================================== -->
-        <div class="view active" id="view-dashboard">
-          <div class="hero-row">
+      <!-- VIEW 3: AUDIT & SLA TRAIL -->
+      <div class="view" id="view-activity" style="display:none;">
+        <div class="exec-audit-container">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
             <div>
-              <p class="eyebrow" id="heroDate">TODAY · REAL-TIME DISPATCH</p>
-              <h1 id="greeting">Good afternoon, Aarav.</h1>
-              <p class="subtle" id="heroSubtle">Report it once. Track it all the way to fixed.</p>
+              <h2 style="font-family: var(--font-display); font-size: 1.4rem;">Activity &amp; SLA Audit Trail</h2>
+              <p style="font-size: 13px; color: var(--muted);">Zero WhatsApp leak guarantee. Every status change, assignment, and note is permanently logged.</p>
             </div>
-            <button class="primary-btn" id="reportBtn"><span>＋</span> Report an issue</button>
+            <span class="grate-badge grate-badge-pink">🛡️ Immutable Audit</span>
           </div>
-
-          <!-- Quick Stats Cards -->
-          <div class="stat-grid">
-            <button class="stat-card" data-filter="active">
-              <span class="stat-label">Active requests</span>
-              <strong id="statActive">0</strong>
-              <small>Needs attention</small>
-            </button>
-            <button class="stat-card" data-filter="progress">
-              <span class="stat-label">In progress</span>
-              <strong id="statProgress">0</strong>
-              <small>Being worked on</small>
-            </button>
-            <button class="stat-card" data-filter="resolved">
-              <span class="stat-label">Resolved</span>
-              <strong id="statResolved">0</strong>
-              <small>Completed</small>
-            </button>
-            <div class="stat-card eta-card">
-              <span class="stat-label">Next Scheduled Action</span>
-              <strong id="statNextAction">Today · 5:30 PM</strong>
-              <small id="statNextActionSub">Plumbing check · TKT-1001</small>
-            </div>
+          <div id="activityList">
+            <!-- Dynamically injected activity stream -->
           </div>
-
-          <!-- Two-Column Grid: Attention List & Live Update -->
-          <div class="dashboard-grid">
-            <!-- Left Panel: Requests in Motion -->
-            <section class="panel attention-panel">
-              <div class="panel-head">
-                <div>
-                  <span class="section-kicker">NEEDS ATTENTION</span>
-                  <h2>Requests in motion</h2>
-                </div>
-                <button class="text-btn" data-go="tickets">View all →</button>
-              </div>
-              <div id="attentionList" class="ticket-list">
-                <!-- Dynamically injected -->
-              </div>
-            </section>
-
-            <!-- Right Panel: Live Visibility Timeline -->
-            <section class="panel timeline-panel">
-              <div class="panel-head">
-                <div>
-                  <span class="section-kicker">LIVE VISIBILITY</span>
-                  <h2>Latest update</h2>
-                </div>
-                <span class="live-pill"><span></span> Live</span>
-              </div>
-
-              <div class="featured-update" id="featuredUpdateBox">
-                <div class="update-icon plumbing" id="featuredIcon">↯</div>
-                <div style="flex: 1;">
-                  <div class="update-top">
-                    <strong id="featuredTitle">Severe Bathroom Pipe Leakage</strong>
-                    <span id="featuredTime">12 min ago</span>
-                  </div>
-                  <p id="featuredAssignee">Assigned to <b>Suresh Patil · Plumbing</b></p>
-                  <div class="mini-progress"><span id="featuredProgress" style="width:68%"></span></div>
-                  <small id="featuredStatusText">Status: In Progress · Diagnosing leak</small>
-                </div>
-              </div>
-
-              <div class="timeline-mini" id="featuredMiniTimeline">
-                <div class="timeline-step done">
-                  <span>✓</span>
-                  <div><strong>Reported</strong><small>09:30 AM · Resident logged</small></div>
-                </div>
-                <div class="timeline-step done">
-                  <span>✓</span>
-                  <div><strong>Assigned</strong><small>10:15 AM · Suresh Patil</small></div>
-                </div>
-                <div class="timeline-step current">
-                  <span>●</span>
-                  <div><strong>In progress</strong><small>10:45 AM · Working in Unit 402</small></div>
-                </div>
-                <div class="timeline-step">
-                  <span>○</span>
-                  <div><strong>Resolved</strong><small>Pending completion</small></div>
-                </div>
-              </div>
-            </section>
-          </div>
-
-          <!-- Insight Strip -->
-          <section class="insight-strip">
-            <div class="insight-icon">💡</div>
-            <div>
-              <strong>No more chasing.</strong>
-              <span>Every request shows <b>what</b> happened, <b>who</b> owns it, and <b>what happens next</b>.</span>
-            </div>
-          </section>
         </div>
-
-        <!-- ============================================== -->
-        <!-- VIEW 2: REQUEST CENTER (TICKETS LIST)          -->
-        <!-- ============================================== -->
-        <div class="view" id="view-tickets">
-          <div class="hero-row compact">
-            <div>
-              <p class="eyebrow">REQUEST CENTER</p>
-              <h1>Maintenance requests</h1>
-              <p class="subtle">A single transparent place to report, track, and close the loop.</p>
-            </div>
-            <button class="primary-btn" id="reportBtn2"><span>＋</span> New request</button>
-          </div>
-
-          <div class="toolbar panel">
-            <div class="search-wrap">
-              <span>⌕</span>
-              <input id="searchInput" type="search" placeholder="Search requests, units, categories, or IDs…">
-            </div>
-
-            <div class="filters" id="filterButtons">
-              <button class="filter active" data-list-filter="all">All</button>
-              <button class="filter" data-list-filter="open">Open</button>
-              <button class="filter" data-list-filter="progress">In progress</button>
-              <button class="filter" data-list-filter="resolved">Resolved</button>
-            </div>
-          </div>
-
-          <section class="panel table-panel">
-            <div id="fullTicketList" class="full-ticket-list">
-              <!-- Dynamically injected -->
-            </div>
-          </section>
-        </div>
-
-        <!-- ============================================== -->
-        <!-- VIEW 3: ACTIVITY / AUDIT TRAIL                 -->
-        <!-- ============================================== -->
-        <div class="view" id="view-activity">
-          <div class="hero-row compact">
-            <div>
-              <p class="eyebrow">AUDIT TRAIL</p>
-              <h1>Activity Log</h1>
-              <p class="subtle">Nothing disappears into a private WhatsApp chat. Full timestamped history.</p>
-            </div>
-          </div>
-          <section class="panel activity-panel" id="activityList">
-            <!-- Dynamically injected -->
-          </section>
-        </div>
-
-      </section>
+      </div>
     </main>
   </div>
 
@@ -304,14 +199,14 @@
 
   <!-- Toast Container -->
   <div class="toast" id="toast" role="status">
-    <span>✓</span>
+    <span style="color:var(--pink); font-size:18px;">✦</span>
     <div>
       <strong id="toastTitle">Done</strong>
       <small id="toastText">Action completed successfully.</small>
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- Self-Contained Independent Scripts -->
   <script src="db.js"></script>
   <script src="app.js"></script>
 </body>

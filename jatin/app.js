@@ -1,6 +1,6 @@
 /**
- * FixFlow — Apartment Maintenance OS (Jatin Edition)
- * Fully Subtle Frontend with Dual-Mode Database Support
+ * FixFlow OS — Independent Jatin Edition
+ * Executive Command Workspace, Master-Detail Inspector, Great Badges & Pink Canvas
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     users: [],
     tickets: [],
     stats: {},
-    activeTicketId: null,
+    activeTicketId: 1, // Currently selected ticket in live inspector
     listFilter: 'all',
     searchQuery: ''
   };
@@ -58,14 +58,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   const dbStatusTextEl = document.getElementById('db-status-text');
 
   async function initDatabase() {
-    const { mode, isApiConnected } = await DB.init();
+    const { mode, isApiConnected, activePort } = await DB.init();
     if (dbStatusEl && dbStatusTextEl) {
       if (isApiConnected) {
-        dbStatusEl.className = 'db-pill sqlite';
-        dbStatusTextEl.textContent = 'SQLite (Port 8000)';
-        dbStatusEl.title = 'Connected directly to Python SQLite backend (server.py)';
+        dbStatusEl.className = 'grate-badge grate-badge-db sqlite';
+        const portStr = activePort ? `Port ${activePort}` : 'Connected';
+        dbStatusTextEl.textContent = `SQLite (${portStr})`;
+        dbStatusEl.title = `Connected directly to Independent SQLite backend (${portStr})`;
       } else {
-        dbStatusEl.className = 'db-pill localstorage';
+        dbStatusEl.className = 'grate-badge grate-badge-db';
         dbStatusTextEl.textContent = 'Local Database';
         dbStatusEl.title = 'Running on client-side persistent storage. Start server.py for SQLite backend.';
       }
@@ -73,7 +74,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   await initDatabase();
 
-  // Load registered users
+  // Load users
   state.users = await DB.getUsers();
 
   const ROLE_MAP = {
@@ -83,169 +84,96 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
   state.currentUser = ROLE_MAP[state.currentRole];
 
-  // --- 5. DATA SYNC & VIEW RENDERING --- //
+  // Helper for Great Badges
+  function getPriorityBadge(priority) {
+    if (priority === 'Emergency') {
+      return `<span class="grate-badge grate-badge-emergency"><span class="grate-badge-dot"></span>⚡ Emergency</span>`;
+    }
+    if (priority === 'High') {
+      return `<span class="grate-badge grate-badge-high"><span class="grate-badge-dot"></span>▲ High</span>`;
+    }
+    if (priority === 'Low') {
+      return `<span class="grate-badge grate-badge-low"><span class="grate-badge-dot"></span>▼ Low</span>`;
+    }
+    return `<span class="grate-badge grate-badge-medium"><span class="grate-badge-dot"></span>◼ Medium</span>`;
+  }
+
+  function getStatusBadge(status) {
+    if (status === 'In_Progress') {
+      return `<span class="grate-badge grate-badge-progress"><span class="grate-badge-dot"></span>● In Progress</span>`;
+    }
+    if (status === 'Resolved') {
+      return `<span class="grate-badge grate-badge-resolved"><span class="grate-badge-dot"></span>✓ Resolved</span>`;
+    }
+    if (status === 'Assigned') {
+      return `<span class="grate-badge grate-badge-assigned"><span class="grate-badge-dot"></span>◐ Assigned</span>`;
+    }
+    return `<span class="grate-badge grate-badge-open"><span class="grate-badge-dot"></span>○ Open</span>`;
+  }
+
+  function getCategoryBadge(category) {
+    const icons = {
+      Plumbing: '🚰',
+      Electrical: '⚡',
+      HVAC: '❄',
+      Carpentry: '🔨',
+      General: '🛠'
+    };
+    return `<span class="grate-badge grate-badge-category">${icons[category] || '🔧'} ${category}</span>`;
+  }
+
+  // --- 5. DATA SYNC & RENDERING --- //
   async function reloadData() {
     state.tickets = await DB.getTickets();
     state.stats = await DB.getStats();
 
-    updateProfileUI();
-    renderStats();
-    renderAttentionList();
-    renderFeaturedUpdate();
-    renderTicketsView();
+    // Ensure active ticket is valid
+    if (!state.tickets.find(t => t.id === state.activeTicketId) && state.tickets.length > 0) {
+      state.activeTicketId = state.tickets[0].id;
+    }
+
+    renderKPIStats();
+    renderTicketFeed();
+    renderLiveInspector();
+    renderFullTicketsView();
     renderActivityView();
   }
 
-  function updateProfileUI() {
-    const user = state.currentUser;
-    const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  function renderKPIStats() {
+    const activeEl = document.getElementById('statActive');
+    const progressEl = document.getElementById('statProgress');
+    const resolvedEl = document.getElementById('statResolved');
+    const nextActionEl = document.getElementById('statNextAction');
+    const nextActionSubEl = document.getElementById('statNextActionSub');
 
-    document.getElementById('sidebarAvatar').textContent = initials;
-    document.getElementById('topAvatar').textContent = initials;
-    document.getElementById('sidebarUserName').textContent = user.name;
+    if (activeEl) activeEl.textContent = state.stats.active || 0;
+    if (progressEl) progressEl.textContent = state.stats.in_progress || 0;
+    if (resolvedEl) resolvedEl.textContent = state.stats.resolved || 0;
 
-    const roleLabel = state.currentRole === 'resident' 
-      ? `${user.unit || 'Unit 402'} · Resident`
-      : state.currentRole === 'staff'
-      ? `${user.specialty || 'Technician'} · Staff`
-      : `Admin Office · Manager`;
-
-    document.getElementById('sidebarUserRole').textContent = roleLabel;
-
-    const greetingEl = document.getElementById('greeting');
-    const subtleEl = document.getElementById('heroSubtle');
-    const navTicketsLabel = document.getElementById('navTicketsLabel');
-
-    if (state.currentRole === 'resident') {
-      greetingEl.textContent = `Good afternoon, ${user.name.split(' ')[0]}.`;
-      subtleEl.textContent = `Report it once. Track it all the way to fixed.`;
-      navTicketsLabel.textContent = `My Requests`;
-    } else if (state.currentRole === 'staff') {
-      greetingEl.textContent = `Welcome back, ${user.name.split(' ')[0]}.`;
-      subtleEl.textContent = `Work order queue: Diagnose, log parts, and complete repairs.`;
-      navTicketsLabel.textContent = `Assigned Jobs`;
-    } else {
-      greetingEl.textContent = `Welcome, ${user.name.split(' ')[0]}.`;
-      subtleEl.textContent = `Community oversight: Real-time SLAs, assignments, and audit trails.`;
-      navTicketsLabel.textContent = `All Requests`;
+    const inProgTicket = state.tickets.find(t => t.status === 'In_Progress') || state.tickets[0];
+    if (inProgTicket) {
+      if (nextActionEl) nextActionEl.textContent = `Today · ${inProgTicket.category}`;
+      if (nextActionSubEl) nextActionSubEl.textContent = `${inProgTicket.ticket_number} · ${inProgTicket.unit}`;
     }
 
-    const activeCount = state.tickets.filter(t => t.status !== 'Resolved' && t.status !== 'Closed').length;
-    document.getElementById('navCount').textContent = activeCount;
-  }
-
-  function renderStats() {
-    const relevantTickets = getRoleScopedTickets();
-    const active = relevantTickets.filter(t => t.status === 'Open' || t.status === 'Assigned').length;
-    const progress = relevantTickets.filter(t => t.status === 'In_Progress').length;
-    const resolved = relevantTickets.filter(t => t.status === 'Resolved' || t.status === 'Closed').length;
-
-    document.getElementById('statActive').textContent = active;
-    document.getElementById('statProgress').textContent = progress;
-    document.getElementById('statResolved').textContent = resolved;
-
-    const activeWithTech = relevantTickets.find(t => t.status === 'In_Progress' || t.status === 'Assigned');
-    if (activeWithTech) {
-      document.getElementById('statNextAction').textContent = `Today · 5:30 PM`;
-      document.getElementById('statNextActionSub').textContent = `${activeWithTech.category} · ${activeWithTech.ticket_number}`;
-    } else {
-      document.getElementById('statNextAction').textContent = `All clear`;
-      document.getElementById('statNextActionSub').textContent = `No pending visits`;
-    }
-  }
-
-  function getCategoryIcon(cat) {
-    switch (cat) {
-      case 'Plumbing': return '💧';
-      case 'Electrical': return '⚡';
-      case 'HVAC': return '❄️';
-      case 'Carpentry': return '🔨';
-      case 'Appliance': return '🔌';
-      default: return '🛠️';
-    }
+    const navCount = document.getElementById('navCount');
+    if (navCount) navCount.textContent = state.tickets.length;
   }
 
   function getRoleScopedTickets() {
     if (state.currentRole === 'resident') {
-      return state.tickets.filter(t => t.created_by_user_id === state.currentUser.id || t.unit === state.currentUser.unit);
-    } else if (state.currentRole === 'staff') {
+      return state.tickets.filter(t => t.unit === state.currentUser.unit || t.created_by_user_id === state.currentUser.id);
+    }
+    if (state.currentRole === 'staff') {
       return state.tickets.filter(t => t.assigned_to_user_id === state.currentUser.id || t.status === 'Open');
     }
     return state.tickets;
   }
 
-  function renderAttentionList() {
+  function renderTicketFeed() {
     const container = document.getElementById('attentionList');
-    const relevant = getRoleScopedTickets().filter(t => t.status !== 'Resolved' && t.status !== 'Closed');
+    if (!container) return;
 
-    if (relevant.length === 0) {
-      container.innerHTML = `
-        <div style="text-align:center; padding:32px 14px; color:var(--muted);">
-          <strong>Everything is resolved!</strong>
-          <p style="font-size:12px; margin-top:4px;">No pending maintenance issues.</p>
-        </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = relevant.slice(0, 4).map(t => {
-      const statusClass = t.status === 'In_Progress' ? 'progress' : t.status === 'Assigned' ? 'progress' : 'open';
-      const statusText = t.status === 'In_Progress' ? 'In progress' : t.status === 'Assigned' ? 'Assigned' : 'Open';
-      const priorityClass = t.priority === 'Emergency' ? 'emergency' : t.priority === 'High' ? 'high' : '';
-
-      return `
-        <div class="ticket-item" onclick="window.openDetailModal(${t.id})">
-          <div class="ticket-icon">${getCategoryIcon(t.category)}</div>
-          <div class="ticket-main">
-            <strong>${t.title}</strong>
-            <span>${t.unit} · ${t.category} ${priorityClass ? `<span class="priority-tag ${priorityClass}">${t.priority}</span>` : ''}</span>
-            <small>${t.assigned_to_name ? `Assigned: ${t.assigned_to_name}` : 'Awaiting assignment'}</small>
-          </div>
-          <div>
-            <span class="status ${statusClass}">${statusText}</span>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  function renderFeaturedUpdate() {
-    const featured = state.tickets.find(t => t.status === 'In_Progress') || state.tickets[0];
-    if (!featured) return;
-
-    document.getElementById('featuredTitle').textContent = featured.title;
-    document.getElementById('featuredIcon').textContent = getCategoryIcon(featured.category);
-    document.getElementById('featuredAssignee').innerHTML = featured.assigned_to_name 
-      ? `Assigned to <b>${featured.assigned_to_name} · ${featured.category}</b>` 
-      : `Status: <b>Awaiting technician dispatch</b>`;
-
-    const statusProgressMap = { Open: '25%', Assigned: '50%', In_Progress: '75%', Resolved: '100%' };
-    document.getElementById('featuredProgress').style.width = statusProgressMap[featured.status] || '40%';
-    document.getElementById('featuredStatusText').textContent = `Status: ${featured.status.replace('_', ' ')} · ${featured.unit}`;
-
-    const step = featured.status === 'Open' ? 1 : featured.status === 'Assigned' ? 2 : featured.status === 'In_Progress' ? 3 : 4;
-    document.getElementById('featuredMiniTimeline').innerHTML = `
-      <div class="timeline-step ${step >= 1 ? 'done' : ''}">
-        <span>✓</span>
-        <div><strong>Reported</strong><small>${featured.created_at.slice(11, 16) || 'Logged'}</small></div>
-      </div>
-      <div class="timeline-step ${step >= 2 ? (step === 2 ? 'current' : 'done') : ''}">
-        <span>${step >= 2 ? '✓' : '2'}</span>
-        <div><strong>Assigned</strong><small>${featured.assigned_to_name || 'Pending'}</small></div>
-      </div>
-      <div class="timeline-step ${step >= 3 ? (step === 3 ? 'current' : 'done') : ''}">
-        <span>${step > 3 ? '✓' : '3'}</span>
-        <div><strong>In progress</strong><small>Diagnosing &amp; parts</small></div>
-      </div>
-      <div class="timeline-step ${step >= 4 ? 'done' : ''}">
-        <span>${step >= 4 ? '✓' : '4'}</span>
-        <div><strong>Resolved</strong><small>${featured.resolved_at ? 'Completed' : 'Pending'}</small></div>
-      </div>
-    `;
-  }
-
-  function renderTicketsView() {
-    const container = document.getElementById('fullTicketList');
     let list = getRoleScopedTickets();
 
     if (state.listFilter === 'open') {
@@ -258,7 +186,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (state.searchQuery) {
       const q = state.searchQuery.toLowerCase();
-      list = list.filter(t => 
+      list = list.filter(t =>
         t.title.toLowerCase().includes(q) ||
         t.ticket_number.toLowerCase().includes(q) ||
         t.unit.toLowerCase().includes(q) ||
@@ -269,40 +197,214 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (list.length === 0) {
       container.innerHTML = `
-        <div style="text-align:center; padding:40px 14px; color:var(--muted);">
-          <strong>No requests found</strong>
-          <p style="font-size:12px; margin-top:4px;">Try searching for another term or changing the filter.</p>
+        <div style="text-align:center; padding:48px 16px; color:var(--muted); background:var(--card); border:1px dashed var(--border); border-radius:var(--radius);">
+          <span style="font-size:24px; display:block; margin-bottom:8px;">✦</span>
+          <strong style="color:var(--foreground);">No requests in this queue</strong>
+          <p style="font-size:12px; margin-top:4px;">Try selecting another filter or report a new issue.</p>
         </div>
       `;
       return;
     }
 
     container.innerHTML = list.map(t => {
-      const statusClass = t.status === 'In_Progress' ? 'progress' : t.status === 'Resolved' ? 'resolved' : 'open';
-      const statusText = t.status === 'In_Progress' ? 'In progress' : t.status === 'Resolved' ? 'Resolved' : (t.status === 'Assigned' ? 'Assigned' : 'Open');
+      const isSelected = t.id === state.activeTicketId;
       const stars = t.rating ? '★'.repeat(t.rating) : '';
 
       return `
-        <div class="ticket-item" onclick="window.openDetailModal(${t.id})">
-          <div class="ticket-icon">${getCategoryIcon(t.category)}</div>
-          <div class="ticket-main">
-            <strong>${t.title}</strong>
-            <span>${t.unit} · ${t.category} · Priority: ${t.priority}</span>
-            <small>${t.assigned_to_name ? `Technician: ${t.assigned_to_name}` : 'Unassigned'} ${stars ? `· Rating: <b style="color:#f59e0b">${stars}</b>` : ''}</small>
+        <article class="ticket-feed-card ${isSelected ? 'selected' : ''}" onclick="window.selectTicket(${t.id})">
+          <div class="ticket-card-top">
+            <div class="ticket-card-badges">
+              <span class="grate-badge grate-badge-unit">🏢 ${t.unit}</span>
+              ${getCategoryBadge(t.category)}
+              ${getPriorityBadge(t.priority)}
+            </div>
+            <span class="ticket-card-id">${t.ticket_number}</span>
           </div>
-          <div class="assigned" style="font-size:11px; color:var(--muted); font-family:var(--font-mono);">
-            ${t.ticket_number}
+
+          <h3 class="ticket-card-title">${t.title}</h3>
+
+          <div class="ticket-card-meta">
+            <div class="ticket-card-assignee">
+              <span>${t.assigned_to_name ? `🔧 ${t.assigned_to_name}` : 'Awaiting assignment'}</span>
+              ${stars ? `<span style="color:#f59e0b; font-weight:bold; margin-left:6px;">${stars}</span>` : ''}
+            </div>
+            <div>
+              ${getStatusBadge(t.status)}
+            </div>
           </div>
-          <div>
-            <span class="status ${statusClass}">${statusText}</span>
-          </div>
-        </div>
+        </article>
       `;
     }).join('');
   }
 
+  // --- 6. LIVE INSPECTOR & RESOLUTION LAB --- //
+  async function renderLiveInspector() {
+    const container = document.getElementById('inspectorContent');
+    if (!container) return;
+
+    const ticket = await DB.getTicketById(state.activeTicketId) || state.tickets[0];
+    if (!ticket) {
+      container.innerHTML = `
+        <div style="text-align:center; padding:60px 20px; color:var(--muted);">
+          <p>Select any ticket on the left to inspect real-time progress and dispatch actions.</p>
+        </div>
+      `;
+      return;
+    }
+
+    state.activeTicketId = ticket.id;
+    const step = ticket.status === 'Open' ? 1 : ticket.status === 'Assigned' ? 2 : ticket.status === 'In_Progress' ? 3 : 4;
+    const isStaffOrManager = state.currentRole === 'staff' || state.currentRole === 'manager';
+    const isResident = state.currentRole === 'resident';
+
+    container.innerHTML = `
+      <div class="inspector-header">
+        <div class="inspector-title-area">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="grate-badge grate-badge-pink">${ticket.ticket_number}</span>
+            <span class="grate-badge grate-badge-unit">${ticket.unit}</span>
+            ${getCategoryBadge(ticket.category)}
+          </div>
+          <h2>${ticket.title}</h2>
+        </div>
+        <div>
+          ${getStatusBadge(ticket.status)}
+        </div>
+      </div>
+
+      <div class="dispatch-stepper">
+        <div class="dispatch-step ${step >= 1 ? 'done' : ''}">
+          <div class="step-node">${step >= 1 ? '✓' : '1'}</div>
+          <span class="step-label">Reported</span>
+        </div>
+        <div class="dispatch-step ${step >= 2 ? (step === 2 ? 'current' : 'done') : ''}">
+          <div class="step-node">${step >= 2 ? '✓' : '2'}</div>
+          <span class="step-label">Assigned</span>
+        </div>
+        <div class="dispatch-step ${step >= 3 ? (step === 3 ? 'current' : 'done') : ''}">
+          <div class="step-node">${step >= 3 ? '✓' : '3'}</div>
+          <span class="step-label">In Progress</span>
+        </div>
+        <div class="dispatch-step ${step >= 4 ? 'done' : ''}">
+          <div class="step-node">${step >= 4 ? '✓' : '4'}</div>
+          <span class="step-label">Resolved</span>
+        </div>
+      </div>
+
+      <p class="inspector-desc">${ticket.description}</p>
+
+      <div class="inspector-grid">
+        <div class="inspector-stat-box">
+          <span>Priority Level</span>
+          <strong>${getPriorityBadge(ticket.priority)}</strong>
+        </div>
+        <div class="inspector-stat-box">
+          <span>Reported By</span>
+          <strong>${ticket.created_by_name}</strong>
+        </div>
+        <div class="inspector-stat-box">
+          <span>Assigned Technician</span>
+          <strong>${ticket.assigned_to_name ? `🔧 ${ticket.assigned_to_name}` : 'None (Pending)'}</strong>
+        </div>
+        <div class="inspector-stat-box">
+          <span>Timestamp</span>
+          <strong style="font-family:var(--font-mono); font-size:11px;">${ticket.created_at}</strong>
+        </div>
+      </div>
+
+      ${ticket.technician_notes ? `
+        <div class="inspector-stat-box" style="border-left: 3px solid var(--pink);">
+          <span>Technician Diagnostic Notes</span>
+          <p style="font-size:12px; margin:4px 0;">${ticket.technician_notes}</p>
+          ${ticket.parts_used ? `<small style="font-family:var(--font-mono); color:var(--muted)">Parts Requisition: ${ticket.parts_used}</small>` : ''}
+        </div>
+      ` : ''}
+
+      ${ticket.rating ? `
+        <div class="inspector-stat-box" style="border-left: 3px solid var(--success);">
+          <span>Resident Feedback & Rating</span>
+          <div style="color:#f59e0b; font-size:15px; margin:2px 0;">${'★'.repeat(ticket.rating)}${'☆'.repeat(5 - ticket.rating)}</div>
+          <p style="font-size:12px;">"${ticket.feedback || 'Resolution verified by resident.'}"</p>
+        </div>
+      ` : ''}
+
+      <!-- Quick Resolution Lab Controls -->
+      <div class="inspector-actions">
+        <div class="inspector-actions-title">⚡ Interactive Dispatch & Action Console</div>
+        <div class="inspector-btn-row">
+          ${isStaffOrManager && ticket.status === 'Assigned' ? `
+            <button class="primary-btn" onclick="window.updateStatus(${ticket.id}, 'In_Progress')">▶ Start working</button>
+          ` : ''}
+          ${isStaffOrManager && ticket.status === 'In_Progress' ? `
+            <button class="primary-btn" onclick="window.promptResolveModal(${ticket.id})">✓ Mark as resolved</button>
+          ` : ''}
+          ${state.currentRole === 'manager' && !ticket.assigned_to_name ? `
+            <button class="secondary-btn" onclick="window.promptAssignModal(${ticket.id})">+ Assign staff</button>
+          ` : ''}
+          ${isResident && ticket.status === 'Resolved' && !ticket.rating ? `
+            <button class="primary-btn" onclick="window.promptRatingModal(${ticket.id})">⭐ Rate technician's work</button>
+          ` : ''}
+          <button class="secondary-btn" onclick="window.openDetailModal(${ticket.id})">Full Record &amp; History</button>
+        </div>
+
+        <div class="inspector-note-box">
+          <input id="quickNoteInput" placeholder="Add an update note to ticket audit trail...">
+          <button class="secondary-btn" onclick="window.submitQuickNote(${ticket.id})">Add Note</button>
+        </div>
+      </div>
+    `;
+  }
+
+  window.selectTicket = function(ticketId) {
+    state.activeTicketId = ticketId;
+    renderTicketFeed();
+    renderLiveInspector();
+  };
+
+  window.submitQuickNote = async function(ticketId) {
+    const input = document.getElementById('quickNoteInput');
+    if (!input) return;
+    const note = input.value.trim();
+    if (!note) return;
+
+    await DB.addLog(ticketId, {
+      user_name: state.currentUser.name,
+      action: 'Note Logged',
+      note: note
+    });
+
+    input.value = '';
+    showToast('Audit updated', 'Note saved to immutable trail.');
+    await reloadData();
+  };
+
+  function renderFullTicketsView() {
+    const container = document.getElementById('fullTicketList');
+    if (!container) return;
+
+    container.innerHTML = state.tickets.map(t => `
+      <article class="ticket-feed-card" onclick="window.openDetailModal(${t.id})">
+        <div class="ticket-card-top">
+          <div class="ticket-card-badges">
+            <span class="grate-badge grate-badge-unit">🏢 ${t.unit}</span>
+            ${getCategoryBadge(t.category)}
+            ${getPriorityBadge(t.priority)}
+          </div>
+          <span class="ticket-card-id">${t.ticket_number}</span>
+        </div>
+        <h3 class="ticket-card-title">${t.title}</h3>
+        <div class="ticket-card-meta">
+          <span>${t.assigned_to_name ? `Assigned: ${t.assigned_to_name}` : 'Awaiting assignment'}</span>
+          <div>${getStatusBadge(t.status)}</div>
+        </div>
+      </article>
+    `).join('');
+  }
+
   async function renderActivityView() {
     const container = document.getElementById('activityList');
+    if (!container) return;
+
     let allLogs = [];
     for (const t of state.tickets) {
       const full = await DB.getTicketById(t.id);
@@ -317,9 +419,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    container.innerHTML = allLogs.slice(0, 15).map(l => `
-      <div class="activity-entry">
-        <div class="activity-dot">✓</div>
+    container.innerHTML = allLogs.slice(0, 20).map(l => `
+      <div class="audit-entry">
+        <div class="audit-dot">✓</div>
         <div style="flex:1;">
           <strong>${l.user_name} · ${l.action}</strong>
           <p>${l.note || 'Updated ticket status'}</p>
@@ -329,80 +431,111 @@ document.addEventListener('DOMContentLoaded', async () => {
     `).join('');
   }
 
-  // --- 6. NAVIGATION & TABS --- //
-  document.querySelectorAll('.nav-item[data-view]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.nav-item[data-view]').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const viewId = btn.getAttribute('data-view');
+  // --- 7. NAVIGATION & VIEW SWITCHING --- //
+  const navPills = document.querySelectorAll('.exec-nav-pill[data-view]');
+  navPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      navPills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      const viewId = pill.getAttribute('data-view');
       switchView(viewId);
-    });
-  });
-
-  document.querySelectorAll('[data-go="tickets"]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.nav-item[data-view]').forEach(b => b.classList.remove('active'));
-      document.querySelector('.nav-item[data-view="tickets"]').classList.add('active');
-      switchView('tickets');
-    });
-  });
-
-  document.querySelectorAll('.stat-card[data-filter]').forEach(card => {
-    card.addEventListener('click', () => {
-      const filter = card.getAttribute('data-filter');
-      state.listFilter = filter === 'active' ? 'open' : filter;
-      document.querySelectorAll('.nav-item[data-view]').forEach(b => b.classList.remove('active'));
-      document.querySelector('.nav-item[data-view="tickets"]').classList.add('active');
-      document.querySelectorAll('.filter').forEach(f => {
-        f.classList.toggle('active', f.getAttribute('data-list-filter') === state.listFilter);
-      });
-      switchView('tickets');
-      renderTicketsView();
     });
   });
 
   function switchView(viewId) {
     state.currentView = viewId;
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.getElementById(`view-${viewId}`).classList.add('active');
-
-    const pageTitleMap = {
-      dashboard: 'Dashboard',
-      tickets: 'Maintenance Requests',
-      activity: 'Activity Audit Trail'
+    const views = {
+      dashboard: document.getElementById('view-dashboard'),
+      tickets: document.getElementById('view-tickets'),
+      activity: document.getElementById('view-activity')
     };
-    document.getElementById('pageTitle').textContent = pageTitleMap[viewId] || 'Dashboard';
+
+    Object.keys(views).forEach(k => {
+      if (views[k]) {
+        views[k].style.display = (k === viewId) ? 'block' : 'none';
+        if (k === viewId) views[k].classList.add('active');
+        else views[k].classList.remove('active');
+      }
+    });
+
+    if (viewId === 'activity') renderActivityView();
+    if (viewId === 'tickets') renderFullTicketsView();
   }
 
-  // --- 7. ROLE SWITCHER --- //
-  const roleSelect = document.getElementById('roleSelect');
-  roleSelect.addEventListener('change', (e) => {
-    const role = e.target.value;
-    state.currentRole = role;
-    state.currentUser = ROLE_MAP[role];
-    showToast(`Switched view to ${e.target.options[e.target.selectedIndex].text}`);
-    reloadData();
-  });
-
-  // --- 8. FILTERS & SEARCH --- //
-  document.querySelectorAll('.filter[data-list-filter]').forEach(btn => {
+  // Filter Buttons
+  const filterButtons = document.querySelectorAll('.filter-chip[data-list-filter]');
+  filterButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter[data-list-filter]').forEach(b => b.classList.remove('active'));
+      filterButtons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state.listFilter = btn.getAttribute('data-list-filter');
-      renderTicketsView();
+      renderTicketFeed();
     });
   });
 
+  // KPI Card Clicks as Filters
+  document.querySelectorAll('.kpi-card[data-filter]').forEach(card => {
+    card.addEventListener('click', () => {
+      const filter = card.getAttribute('data-filter');
+      state.listFilter = filter;
+      filterButtons.forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-list-filter') === filter);
+      });
+      renderTicketFeed();
+    });
+  });
+
+  // Search Inputs
   const searchInput = document.getElementById('searchInput');
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       state.searchQuery = e.target.value.trim();
-      renderTicketsView();
+      renderTicketFeed();
     });
   }
 
-  // --- 9. MODALS SYSTEM --- //
+  const searchInput2 = document.getElementById('searchInput2');
+  if (searchInput2) {
+    searchInput2.addEventListener('input', (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      const container = document.getElementById('fullTicketList');
+      const filtered = state.tickets.filter(t => 
+        t.title.toLowerCase().includes(q) ||
+        t.ticket_number.toLowerCase().includes(q) ||
+        t.unit.toLowerCase().includes(q)
+      );
+      container.innerHTML = filtered.map(t => `
+        <article class="ticket-feed-card" onclick="window.openDetailModal(${t.id})">
+          <div class="ticket-card-top">
+            <div class="ticket-card-badges">
+              <span class="grate-badge grate-badge-unit">🏢 ${t.unit}</span>
+              ${getCategoryBadge(t.category)}
+              ${getPriorityBadge(t.priority)}
+            </div>
+            <span class="ticket-card-id">${t.ticket_number}</span>
+          </div>
+          <h3 class="ticket-card-title">${t.title}</h3>
+          <div class="ticket-card-meta">
+            <span>${t.assigned_to_name ? `Assigned: ${t.assigned_to_name}` : 'Awaiting assignment'}</span>
+            <div>${getStatusBadge(t.status)}</div>
+          </div>
+        </article>
+      `).join('');
+    });
+  }
+
+  // Persona Role Switcher
+  const roleSelect = document.getElementById('roleSelect');
+  if (roleSelect) {
+    roleSelect.addEventListener('change', (e) => {
+      state.currentRole = e.target.value;
+      state.currentUser = ROLE_MAP[state.currentRole];
+      showToast('Persona active', `Viewing workspace as ${state.currentUser.name}`);
+      reloadData();
+    });
+  }
+
+  // --- 8. MODALS & FORMS --- //
   const modalBackdrop = document.getElementById('modalBackdrop');
   const modalClose = document.getElementById('modalClose');
   const modalContent = document.getElementById('modalContent');
@@ -511,13 +644,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       closeModal();
+      state.activeTicketId = created.id;
       await reloadData();
       showToast('Request submitted!', `Ticket #${created.ticket_number} created.`);
     });
   }
 
   document.getElementById('reportBtn').addEventListener('click', showReportModal);
-  document.getElementById('reportBtn2').addEventListener('click', showReportModal);
 
   window.openDetailModal = async function(ticketId) {
     state.activeTicketId = ticketId;
@@ -532,37 +665,40 @@ document.addEventListener('DOMContentLoaded', async () => {
       <div class="modal-inner">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-right:32px;">
           <div>
-            <span style="font-size:11px; color:var(--muted); font-family:var(--font-mono);">${ticket.ticket_number}</span>
+            <div style="display:flex; gap:6px; margin-bottom:4px;">
+              <span class="grate-badge grate-badge-pink">${ticket.ticket_number}</span>
+              <span class="grate-badge grate-badge-unit">${ticket.unit}</span>
+            </div>
             <h2>${ticket.title}</h2>
           </div>
-          <span class="status ${ticket.status === 'In_Progress' ? 'progress' : ticket.status === 'Resolved' ? 'resolved' : 'open'}">
-            ${ticket.status.replace('_', ' ')}
-          </span>
+          <div>
+            ${getStatusBadge(ticket.status)}
+          </div>
         </div>
 
         <p class="modal-sub">${ticket.description}</p>
 
-        <div class="detail-grid">
-          <div class="detail-box">
+        <div class="inspector-grid" style="margin-bottom:16px;">
+          <div class="inspector-stat-box">
             <span>Location &amp; Reporter</span>
             <strong>${ticket.unit} · ${ticket.created_by_name}</strong>
           </div>
-          <div class="detail-box">
+          <div class="inspector-stat-box">
             <span>Category &amp; Priority</span>
             <strong>${ticket.category} · ${ticket.priority}</strong>
           </div>
-          <div class="detail-box">
+          <div class="inspector-stat-box">
             <span>Assigned Staff</span>
             <strong>${ticket.assigned_to_name ? `🔧 ${ticket.assigned_to_name}` : 'Awaiting assignment'}</strong>
           </div>
-          <div class="detail-box">
+          <div class="inspector-stat-box">
             <span>Reported At</span>
             <strong>${ticket.created_at}</strong>
           </div>
         </div>
 
         ${ticket.technician_notes ? `
-          <div class="detail-box" style="margin-bottom:14px; border-left:3px solid var(--accent);">
+          <div class="inspector-stat-box" style="margin-bottom:14px; border-left:3px solid var(--pink);">
             <span>Technician Fix Log</span>
             <p style="font-size:12px; margin:2px 0;">${ticket.technician_notes}</p>
             ${ticket.parts_used ? `<small style="font-family:var(--font-mono); color:var(--muted)">Parts: ${ticket.parts_used}</small>` : ''}
@@ -570,32 +706,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         ` : ''}
 
         ${ticket.rating ? `
-          <div class="detail-box" style="margin-bottom:14px; border-left:3px solid var(--success);">
+          <div class="inspector-stat-box" style="margin-bottom:14px; border-left:3px solid var(--success);">
             <span>Resident Feedback</span>
             <div style="color:#f59e0b; font-size:16px;">${'★'.repeat(ticket.rating)}${'☆'.repeat(5 - ticket.rating)}</div>
             <p style="font-size:12px; margin:2px 0;">"${ticket.feedback || 'Great job!'}"</p>
           </div>
         ` : ''}
 
-        <div class="timeline-mini" style="padding:10px 0;">
-          <div class="timeline-step ${step >= 1 ? 'done' : ''}">
-            <span>✓</span><div><strong>Reported</strong><small>${ticket.created_at}</small></div>
+        <div class="dispatch-stepper" style="padding:10px 0;">
+          <div class="dispatch-step ${step >= 1 ? 'done' : ''}">
+            <div class="step-node">${step >= 1 ? '✓' : '1'}</div><div><span class="step-label">Reported</span></div>
           </div>
-          <div class="timeline-step ${step >= 2 ? 'done' : ''}">
-            <span>${step >= 2 ? '✓' : '2'}</span><div><strong>Assigned</strong><small>${ticket.assigned_to_name || 'Staff'}</small></div>
+          <div class="dispatch-step ${step >= 2 ? 'done' : ''}">
+            <div class="step-node">${step >= 2 ? '✓' : '2'}</div><div><span class="step-label">Assigned</span></div>
           </div>
-          <div class="timeline-step ${step >= 3 ? (step === 3 ? 'current' : 'done') : ''}">
-            <span>${step > 3 ? '✓' : '3'}</span><div><strong>In Progress</strong><small>Diagnosis &amp; repair</small></div>
+          <div class="dispatch-step ${step >= 3 ? (step === 3 ? 'current' : 'done') : ''}">
+            <div class="step-node">${step > 3 ? '✓' : '3'}</div><div><span class="step-label">In Progress</span></div>
           </div>
-          <div class="timeline-step ${step >= 4 ? 'done' : ''}">
-            <span>${step >= 4 ? '✓' : '4'}</span><div><strong>Resolved</strong><small>${ticket.resolved_at || 'Pending'}</small></div>
+          <div class="dispatch-step ${step >= 4 ? 'done' : ''}">
+            <div class="step-node">${step >= 4 ? '✓' : '4'}</div><div><span class="step-label">Resolved</span></div>
           </div>
         </div>
 
         ${isStaffOrManager ? `
-          <div class="staff-controls">
-            <label>Staff &amp; Manager Controls</label>
-            <div class="inline">
+          <div class="inspector-actions" style="margin-top:16px;">
+            <div class="inspector-actions-title">Staff Controls</div>
+            <div class="inspector-btn-row">
               ${ticket.status === 'Assigned' ? `
                 <button class="primary-btn" onclick="window.updateStatus(${ticket.id}, 'In_Progress')">▶ Start working</button>
               ` : ''}
@@ -610,16 +746,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         ` : ''}
 
         ${isResident && ticket.status === 'Resolved' && !ticket.rating ? `
-          <div class="staff-controls">
-            <label>Rate Resolution</label>
+          <div class="inspector-actions" style="margin-top:16px;">
+            <div class="inspector-actions-title">Rate Resolution</div>
             <button class="primary-btn" onclick="window.promptRatingModal(${ticket.id})">⭐ Rate technician's work</button>
           </div>
         ` : ''}
 
         <div style="margin-top:20px; border-top:1px solid var(--line); padding-top:15px;">
-          <label style="font-size:11px; font-weight:700; display:block; margin-bottom:6px;">Add note to audit trail</label>
+          <label style="font-size:11px; font-weight:700; display:block; margin-bottom:6px; color:var(--muted)">Add note to audit trail</label>
           <div style="display:flex; gap:8px;">
-            <input id="detailNewNote" style="flex:1; border:1px solid var(--border); background:var(--input); border-radius:var(--radius); padding:8px 12px; font-size:12px;" placeholder="Add an update note...">
+            <input id="detailNewNote" style="flex:1; border:1px solid var(--border); background:var(--input); border-radius:var(--radius); padding:8px 12px; font-size:12px; color:var(--foreground);" placeholder="Add an update note...">
             <button class="secondary-btn" onclick="window.postDetailNote(${ticket.id})">Post</button>
           </div>
         </div>
@@ -678,25 +814,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     closeModal();
     await reloadData();
-    showToast('Job marked as Resolved!', 'Resident will be notified to review.');
+    showToast('Work completed!', 'Ticket marked as resolved.');
   };
 
   window.promptAssignModal = function(ticketId) {
+    const techs = state.users.filter(u => u.role === 'technician');
     const html = `
       <div class="modal-inner">
-        <h2>Assign Staff</h2>
-        <p class="modal-sub">Dispatch a technician for this request.</p>
+        <h2>Assign Maintenance Staff</h2>
+        <p class="modal-sub">Select the appropriate technician for dispatch.</p>
         <div class="field full" style="margin-bottom:16px;">
-          <label>Select Technician</label>
+          <label>Available Technicians</label>
           <select id="assignTechSelect">
-            <option value="5">Suresh Patil — Plumbing &amp; Sanitization</option>
-            <option value="4">Rajesh Kumar — Electrical &amp; HVAC</option>
-            <option value="6">Vikram Singh — Carpentry &amp; General</option>
+            ${techs.map(t => `<option value="${t.id}">${t.name} (${t.specialty})</option>`).join('')}
           </select>
         </div>
         <div class="modal-footer">
-          <button class="secondary-btn" onclick="window.openDetailModal(${ticketId})">Back</button>
-          <button class="primary-btn" onclick="window.submitAssign(${ticketId})">Assign</button>
+          <button class="secondary-btn" onclick="document.getElementById('modalClose').click()">Cancel</button>
+          <button class="primary-btn" onclick="window.submitAssign(${ticketId})">Confirm assignment</button>
         </div>
       </div>
     `;
@@ -704,83 +839,98 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   window.submitAssign = async function(ticketId) {
-    const techId = parseInt(document.getElementById('assignTechSelect').value);
-    const techUser = state.users.find(u => u.id === techId) || { name: 'Staff Member' };
+    const techId = Number(document.getElementById('assignTechSelect').value);
+    const tech = state.users.find(u => u.id === techId);
+    if (!tech) return;
 
     await DB.updateTicket(ticketId, {
+      assigned_to_user_id: tech.id,
+      assigned_to_name: tech.name,
       status: 'Assigned',
-      assigned_to_user_id: techId,
-      assigned_to_name: techUser.name,
       log_action: 'Staff Assigned',
       log_user: state.currentUser.name,
-      log_note: `Assigned to ${techUser.name}`
+      log_note: `Assigned ${tech.name} (${tech.specialty})`
     });
 
     closeModal();
     await reloadData();
-    showToast('Staff assigned', `Dispatched ${techUser.name}.`);
+    showToast('Staff assigned', `${tech.name} has been notified.`);
   };
 
   window.promptRatingModal = function(ticketId) {
     const html = `
       <div class="modal-inner">
-        <h2>Rate Work Quality</h2>
-        <p class="modal-sub">How was the maintenance resolution?</p>
-        <div class="field full" style="margin-bottom:14px;">
-          <label>Rating (1 to 5 Stars)</label>
-          <select id="ratingScoreSelect">
-            <option value="5">★★★★★ (5 Stars - Excellent)</option>
-            <option value="4">★★★★☆ (4 Stars - Good)</option>
-            <option value="3">★★★☆☆ (3 Stars - Average)</option>
-            <option value="2">★★☆☆☆ (2 Stars - Poor)</option>
-            <option value="1">★☆☆☆☆ (1 Star - Incomplete)</option>
-          </select>
+        <h2>Rate the Resolution</h2>
+        <p class="modal-sub">How satisfied are you with the technician's fix?</p>
+        <div style="font-size:28px; text-align:center; margin:16px 0; cursor:pointer;" id="starRatingBox">
+          <span data-star="1" style="color:#f59e0b">★</span>
+          <span data-star="2" style="color:#f59e0b">★</span>
+          <span data-star="3" style="color:#f59e0b">★</span>
+          <span data-star="4" style="color:#f59e0b">★</span>
+          <span data-star="5" style="color:#f59e0b">★</span>
         </div>
         <div class="field full" style="margin-bottom:16px;">
-          <label>Comments</label>
-          <textarea id="ratingComment" placeholder="Any comments on response time or quality..."></textarea>
+          <label>Comments / Feedback (Optional)</label>
+          <input id="feedbackInput" placeholder="e.g. Arrived on time and resolved quickly!">
         </div>
         <div class="modal-footer">
-          <button class="secondary-btn" onclick="window.openDetailModal(${ticketId})">Back</button>
-          <button class="primary-btn" onclick="window.submitRating(${ticketId})">Submit feedback</button>
+          <button class="secondary-btn" onclick="document.getElementById('modalClose').click()">Skip</button>
+          <button class="primary-btn" onclick="window.submitRating(${ticketId})">Submit Review</button>
         </div>
       </div>
     `;
     openModal(html);
+
+    let selectedRating = 5;
+    const stars = document.querySelectorAll('#starRatingBox span');
+    stars.forEach(s => {
+      s.addEventListener('click', () => {
+        selectedRating = Number(s.getAttribute('data-star'));
+        stars.forEach(starEl => {
+          const val = Number(starEl.getAttribute('data-star'));
+          starEl.textContent = val <= selectedRating ? '★' : '☆';
+        });
+      });
+    });
+
+    window._currentRating = () => selectedRating;
   };
 
   window.submitRating = async function(ticketId) {
-    const rating = parseInt(document.getElementById('ratingScoreSelect').value);
-    const feedback = document.getElementById('ratingComment').value.trim();
+    const rating = window._currentRating ? window._currentRating() : 5;
+    const feedback = document.getElementById('feedbackInput').value.trim();
 
     await DB.updateTicket(ticketId, {
       rating,
       feedback,
-      log_action: 'Resident Rated Work',
+      log_action: 'Resident Rated',
       log_user: state.currentUser.name,
-      log_note: `Resident gave ${rating} stars: "${feedback || 'No comments'}"`
+      log_note: `Rated ${rating}/5 stars: "${feedback || 'No comments'}"`
     });
 
     closeModal();
     await reloadData();
-    showToast('Thank you!', 'Your rating has been saved.');
+    showToast('Review submitted', 'Thank you for your feedback!');
   };
 
   window.postDetailNote = async function(ticketId) {
-    const note = document.getElementById('detailNewNote').value.trim();
+    const input = document.getElementById('detailNewNote');
+    if (!input) return;
+    const note = input.value.trim();
     if (!note) return;
 
     await DB.addLog(ticketId, {
       user_name: state.currentUser.name,
-      action: `${state.currentRole.toUpperCase()} Note`,
-      note
+      action: 'Note Logged',
+      note: note
     });
 
-    showToast('Note added', 'Saved to the audit trail.');
+    showToast('Note added', 'Saved to immutable audit trail.');
+    await reloadData();
     window.openDetailModal(ticketId);
   };
 
-  // --- 10. DATABASE EXPORT & RESET --- //
+  // Database Export & Reset
   const btnExport = document.getElementById('btn-export-db');
   if (btnExport) {
     btnExport.addEventListener('click', async () => {
@@ -789,156 +939,89 @@ document.addEventListener('DOMContentLoaded', async () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `maintenance_db_jatin_${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `fixflow_jatin_export_${Date.now()}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      showToast('Database Exported', 'Downloaded backup JSON.');
+      showToast('Database exported', 'JSON export downloaded.');
     });
   }
 
   const btnReset = document.getElementById('btn-reset-db');
   if (btnReset) {
     btnReset.addEventListener('click', async () => {
-      if (confirm('Reset database to clean initial sample state?')) {
+      if (confirm('Reset FixFlow database to clean initial state?')) {
         await DB.resetData();
+        showToast('Database reset', 'Restored to clean state.');
         await reloadData();
-        showToast('Database reset', 'Restored to clean demo data.');
       }
     });
   }
 
-  // --- 11. SIDEBAR CONTROLS --- //
-  const appShell = document.getElementById('appShell');
-  const sidebar = document.getElementById('sidebar');
-  const openSidebar = document.getElementById('openSidebar');
-  const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
-  const mobileMenuClose = document.getElementById('mobileMenuClose');
-
-  function toggleSidebar() {
-    if (window.innerWidth <= 768) {
-      sidebar.classList.toggle('open');
-    } else {
-      appShell.classList.toggle('sidebar-collapsed');
-    }
-  }
-
-  function closeSidebar() {
-    if (window.innerWidth <= 768) {
-      sidebar.classList.remove('open');
-    } else {
-      appShell.classList.add('sidebar-collapsed');
-    }
-  }
-
-  if (openSidebar) openSidebar.addEventListener('click', toggleSidebar);
-  if (sidebarCloseBtn) sidebarCloseBtn.addEventListener('click', closeSidebar);
-  if (mobileMenuClose) mobileMenuClose.addEventListener('click', closeSidebar);
-
-  // Top Actions
-  const notifBtn = document.getElementById('notifBtn');
-  if (notifBtn) {
-    notifBtn.addEventListener('click', () => {
-      showToast('Notifications Active', '3 requests in progress · Next technician visit at 5:30 PM');
-    });
-  }
-
-  const topAvatar = document.getElementById('topAvatar');
-  if (topAvatar) {
-    topAvatar.addEventListener('click', () => {
-      showToast(state.currentUser.name, `${state.currentRole.toUpperCase()} · Greenview Residency`);
-    });
-  }
-
-  // Button Ripple Animations
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest('button, .primary-btn, .secondary-btn, .icon-btn, .filter, .stat-card, .nav-item, .sidebar-toggle-btn');
-    if (!btn) return;
-
-    const rect = btn.getBoundingClientRect();
-    const ripple = document.createElement('span');
-    ripple.className = 'btn-ripple';
-    const size = Math.max(rect.width, rect.height);
-    ripple.style.width = ripple.style.height = `${size}px`;
-    ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
-    ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
-
-    btn.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 600);
-  });
-
-  // --- 12. FULLY SUBTLE BACKGROUND CANVAS ENGINE --- //
+  // --- 9. INTERACTIVE BACKGROUND (PINK PALETTE) --- //
   function initInteractiveBackground() {
     const canvas = document.getElementById('bg-canvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    let width = 0, height = 0, dpr = 1;
+    if (!ctx) return;
+
+    let width = 0, height = 0;
+    const mouse = { x: -9999, y: -9999, active: false, radius: 140 };
+    let currentStyle = 'subtle-waves';
+
+    const bgSelect = document.getElementById('bgStyleSelect');
+    if (bgSelect) {
+      bgSelect.addEventListener('change', (e) => {
+        currentStyle = e.target.value;
+      });
+    }
 
     function resize() {
-      dpr = window.devicePixelRatio || 1;
-      width = window.innerWidth;
-      height = window.innerHeight;
-      canvas.width = Math.floor(width * dpr);
-      canvas.height = Math.floor(height * dpr);
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
     }
-    resize();
     window.addEventListener('resize', resize);
+    resize();
 
-    const mouse = { x: width / 2, y: height / 2, active: false, radius: 150 };
-    window.addEventListener('pointermove', (e) => {
+    window.addEventListener('mousemove', (e) => {
       mouse.x = e.clientX;
       mouse.y = e.clientY;
       mouse.active = true;
     });
-    window.addEventListener('pointerleave', () => {
+
+    window.addEventListener('mouseleave', () => {
       mouse.active = false;
     });
 
     const waves = [];
     window.addEventListener('click', (e) => {
+      if (waves.length > 5) waves.shift();
       waves.push({
         x: e.clientX,
         y: e.clientY,
-        radius: 4,
-        maxRadius: Math.max(width, height) * 0.9,
-        speed: 6.5,
-        amplitude: 22,
-        decay: 0.982
+        radius: 0,
+        maxRadius: 180,
+        speed: 2.2,
+        amplitude: 14,
+        decay: 0.94
       });
     });
 
-    const bgStyleSelect = document.getElementById('bgStyleSelect');
-    let currentStyle = localStorage.getItem('jatin_bg_style') || 'subtle-waves';
-    if (bgStyleSelect) {
-      bgStyleSelect.value = currentStyle;
-      bgStyleSelect.addEventListener('change', (e) => {
-        currentStyle = e.target.value;
-        localStorage.setItem('jatin_bg_style', currentStyle);
-        showToast('Background Style', `Switched to ${e.target.options[e.target.selectedIndex].text}`);
-      });
-    }
-
-    const CONTOUR_COUNT = 7;
-    const CONTOUR_POINTS = 28;
-
-    function renderSubtleWaves(scheeleRgb, isDark, time) {
-      ctx.lineWidth = 1.0;
+    const CONTOUR_COUNT = 8;
+    function renderSubtleWaves(pinkRgb, isDark, time) {
+      ctx.lineWidth = 0.9;
+      const stepX = 20;
 
       for (let i = 0; i < CONTOUR_COUNT; i++) {
         const yBase = (height / (CONTOUR_COUNT + 1)) * (i + 1);
-        const freq = 0.0006 + i * 0.00015;
-        const phase = i * 0.9;
-        const baseAmp = 12 + i * 3.5;
+        const freq = 0.0016 + i * 0.0003;
+        const baseAmp = 10 + i * 4;
+        const phase = i * 0.8;
 
         ctx.beginPath();
         let first = true;
 
-        for (let j = 0; j <= CONTOUR_POINTS; j++) {
-          const bx = (width / CONTOUR_POINTS) * j;
-          let by = yBase + Math.sin(time * freq + j * 0.25 + phase) * baseAmp
-                         + Math.cos(time * (freq * 0.55) + j * 0.14) * (baseAmp * 0.35);
+        for (let bx = 0; bx <= width + stepX; bx += stepX) {
+          let by = yBase + Math.sin(time * freq + (bx / width) * 4.2 + phase) * baseAmp;
 
           if (mouse.active) {
             const dx = bx - mouse.x;
@@ -946,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const dist = Math.hypot(dx, dy);
             if (dist < mouse.radius && dist > 0) {
               const force = (1 - dist / mouse.radius);
-              by += (dy / dist) * force * 24;
+              by -= (dy / dist) * force * 24;
             }
           }
 
@@ -955,9 +1038,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const dy = by - wave.y;
             const dist = Math.hypot(dx, dy);
             const waveDiff = dist - wave.radius;
-            if (Math.abs(waveDiff) < 60) {
-              const waveRatio = Math.cos((waveDiff / 60) * Math.PI * 0.5);
-              by += waveRatio * wave.amplitude * 1.1;
+            if (Math.abs(waveDiff) < 50) {
+              const waveRatio = Math.cos((waveDiff / 50) * Math.PI * 0.5);
+              by += waveRatio * wave.amplitude;
             }
           }
 
@@ -970,26 +1053,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const opacity = isDark 
-          ? (0.10 + (i / CONTOUR_COUNT) * 0.14)
-          : (0.08 + (i / CONTOUR_COUNT) * 0.12);
-        ctx.strokeStyle = `rgba(${scheeleRgb}, ${opacity})`;
+          ? (0.10 + (i / CONTOUR_COUNT) * 0.16)
+          : (0.07 + (i / CONTOUR_COUNT) * 0.12);
+        ctx.strokeStyle = `rgba(${pinkRgb}, ${opacity})`;
         ctx.stroke();
-
-        if (i % 2 === 1) {
-          const markerX = ((i * 180 + time * 0.015) % (width - 120)) + 60;
-          const markerY = yBase + Math.sin(time * freq + (markerX / width) * 5.0 + phase) * baseAmp;
-          ctx.beginPath();
-          ctx.arc(markerX, markerY, 1.8, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${scheeleRgb}, ${opacity + 0.2})`;
-          ctx.fill();
-        }
       }
     }
 
-    const SPACING = 38;
-    function renderSubtleGrid(scheeleRgb, isDark) {
-      const defaultDotColor = isDark ? 'rgba(235, 235, 235, 0.08)' : 'rgba(30, 30, 30, 0.06)';
-      const crosshairColor = isDark ? 'rgba(235, 235, 235, 0.15)' : 'rgba(30, 30, 30, 0.12)';
+    const SPACING = 40;
+    function renderSubtleGrid(pinkRgb, isDark) {
+      const defaultDotColor = isDark ? 'rgba(240, 240, 240, 0.06)' : 'rgba(30, 30, 30, 0.05)';
       const cols = Math.ceil(width / SPACING) + 1;
       const rows = Math.ceil(height / SPACING) + 1;
 
@@ -1013,29 +1086,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
           }
 
-          const isMajorNode = (c % 4 === 0 && r % 4 === 0);
-
           if (intensity > 0.05) {
             const glow = Math.min(1, intensity);
             ctx.beginPath();
             ctx.arc(px, py, 1.4 + glow * 1.0, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(${scheeleRgb}, ${0.25 + glow * 0.4})`;
+            ctx.fillStyle = `rgba(${pinkRgb}, ${0.3 + glow * 0.5})`;
             ctx.fill();
-            if (isMajorNode) {
-              ctx.strokeStyle = `rgba(${scheeleRgb}, ${0.3 + glow * 0.3})`;
-              ctx.lineWidth = 0.8;
-              ctx.beginPath();
-              ctx.moveTo(px - 3, py); ctx.lineTo(px + 3, py);
-              ctx.moveTo(px, py - 3); ctx.lineTo(px + 3, py);
-              ctx.stroke();
-            }
-          } else if (isMajorNode) {
-            ctx.strokeStyle = crosshairColor;
-            ctx.lineWidth = 0.6;
-            ctx.beginPath();
-            ctx.moveTo(px - 2.5, py); ctx.lineTo(px + 2.5, py);
-            ctx.moveTo(px, py - 2.5); ctx.lineTo(px + 2.5, py);
-            ctx.stroke();
           } else {
             ctx.fillStyle = defaultDotColor;
             ctx.fillRect(px - 0.5, py - 0.5, 1, 1);
@@ -1052,7 +1108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       radius: Math.random() * 1.5 + 1
     }));
 
-    function renderSubtleMesh(scheeleRgb, isDark) {
+    function renderSubtleMesh(pinkRgb, isDark) {
       ctx.lineWidth = 0.6;
 
       for (let i = 0; i < particles.length; i++) {
@@ -1067,7 +1123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${scheeleRgb}, ${isDark ? 0.22 : 0.16})`;
+        ctx.fillStyle = `rgba(${pinkRgb}, ${isDark ? 0.25 : 0.18})`;
         ctx.fill();
 
         for (let j = i + 1; j < particles.length; j++) {
@@ -1077,27 +1133,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `rgba(${scheeleRgb}, ${(1 - dist / 90) * 0.08})`;
-            ctx.stroke();
-          }
-        }
-
-        if (mouse.active) {
-          const mDist = Math.hypot(p.x - mouse.x, p.y - mouse.y);
-          if (mDist < 120) {
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(mouse.x, mouse.y);
-            ctx.strokeStyle = `rgba(${scheeleRgb}, ${(1 - mDist / 120) * 0.2})`;
+            ctx.strokeStyle = `rgba(${pinkRgb}, ${(1 - dist / 90) * 0.1})`;
             ctx.stroke();
           }
         }
       }
     }
 
-    function renderMinimalAura(scheeleRgb, isDark) {
-      const grad = ctx.createRadialGradient(width / 2, height / 2, 50, width / 2, height / 2, Math.max(width, height) * 0.6);
-      grad.addColorStop(0, `rgba(${scheeleRgb}, ${isDark ? 0.04 : 0.025})`);
+    function renderMinimalAura(pinkRgb, isDark) {
+      const grad = ctx.createRadialGradient(width / 2, height / 2, 40, width / 2, height / 2, Math.max(width, height) * 0.55);
+      grad.addColorStop(0, `rgba(${pinkRgb}, ${isDark ? 0.05 : 0.03})`);
       grad.addColorStop(1, 'transparent');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, width, height);
@@ -1106,7 +1151,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function mainLoop(time) {
       ctx.clearRect(0, 0, width, height);
       const isDark = document.body.classList.contains('dark');
-      const scheeleRgb = isDark ? '93, 178, 0' : '68, 128, 0';
+      const pinkRgb = isDark ? '236, 72, 153' : '219, 39, 119';
 
       for (let w = waves.length - 1; w >= 0; w--) {
         const wave = waves[w];
@@ -1118,34 +1163,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         ctx.beginPath();
         ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(${scheeleRgb}, ${Math.min(0.2, (wave.amplitude / 22) * 0.18)})`;
-        ctx.lineWidth = 0.9;
+        ctx.strokeStyle = `rgba(${pinkRgb}, ${Math.min(0.25, (wave.amplitude / 22) * 0.2)})`;
+        ctx.lineWidth = 1;
         ctx.stroke();
       }
 
       if (currentStyle === 'subtle-waves') {
-        renderSubtleWaves(scheeleRgb, isDark, time);
+        renderSubtleWaves(pinkRgb, isDark, time);
       } else if (currentStyle === 'subtle-grid') {
-        renderSubtleGrid(scheeleRgb, isDark);
+        renderSubtleGrid(pinkRgb, isDark);
       } else if (currentStyle === 'subtle-mesh') {
-        renderSubtleMesh(scheeleRgb, isDark);
+        renderSubtleMesh(pinkRgb, isDark);
       } else if (currentStyle === 'minimal') {
-        renderMinimalAura(scheeleRgb, isDark);
-      }
-
-      if (mouse.active) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(mouse.x, mouse.y, 14, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(${scheeleRgb}, 0.22)`;
-        ctx.lineWidth = 0.7;
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.arc(mouse.x, mouse.y, 1.8, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${scheeleRgb}, 0.5)`;
-        ctx.fill();
-        ctx.restore();
+        renderMinimalAura(pinkRgb, isDark);
       }
 
       requestAnimationFrame(mainLoop);

@@ -1,25 +1,48 @@
-# FixFlow — Spare Front End (Jatin Edition)
+# FixFlow OS — Independent Jatin Edition
 
-This is a complete, standalone, production-ready spare front end for the **FixFlow Apartment Maintenance OS**, featuring a fully subtle aesthetic, Scheele's green color harmony, crisp white badges, and multi-role operations.
+A 100% self-contained, independent edition of the **FixFlow Apartment Maintenance Operating System**, featuring a rearranged **Executive Command Workspace**, **The Great Badge System**, and a signature **Neon Pink Design Palette**.
 
-## Architecture
+## Key Features & Architecture
 
-- `index.html`: Complete dashboard UI with Role Switcher (Resident, Staff, Manager), Request Center, Attention Queue, Audit Trail, and Modals.
-- `style.css`: Clean, fully subtle stylesheet with light/dark themes, Scheele's green accents (`#5db200`), frosted glass cards, and smooth micro-animations.
-- `app.js`: Dynamic frontend application with real-time filtering, work order updates, 5-star resident reviews, role-based controls, and subtle ambient canvas background.
-- `db.js`: Dual-mode database layer that auto-connects to the Python SQLite backend (`http://localhost:8000/api`) or operates offline via persistent Browser LocalStorage.
+1. **100% Independent & Self-Contained**:
+   - Dedicated SQLite backend (`jatin/server.py` on Port 8001).
+   - Dedicated local database (`jatin/maintenance_jatin.db` & `jatin/init_db.py`).
+   - Zero dependencies on parent directories or other folders.
+   - Dual-Mode DB engine: Auto-connects to independent SQLite on Port 8001 (or 8000), with instantaneous client-side LocalStorage fallback.
+
+2. **Rearranged Executive Command Layout**:
+   - **Top Executive Command Bar**: Consolidated logo with glowing pink mark (`✦ FF`), independent badge, DB engine pill, segmented view tabs, persona switcher, background design selector, DB export/reset tools, theme toggle, and primary "Report Issue" action.
+   - **Horizontal KPI Ribbon**: 4 glass metric cards tracking Active Issues, Work in Motion, Verified Resolutions, and SLA Targets with 1-click queue filtering.
+   - **Split-Screen Master-Detail Workspace**:
+     - *Left Feed*: Fast search, filter chips, and interactive cards.
+     - *Right Live Inspector & Resolution Lab*: Sticky inspection console with 4-step dispatch tracker, technician notes, 1-click status transitions, and instant note dispatcher.
+   - **Audit & SLA Trail**: Transparent timestamped activity feed ensuring zero WhatsApp leak.
+
+3. **The Great Badge System (`.grate-badge`)**:
+   - Modern pill-shaped badges with frosted glass blur and glowing pink borders.
+   - Pulsing radar dots (`.grate-badge-pulse`) for urgent emergencies and active work orders.
+   - Variants: `.grate-badge-pink`, `.grate-badge-emergency`, `.grate-badge-progress`, `.grate-badge-resolved`, `.grate-badge-category`, `.grate-badge-unit`.
+
+4. **Signature Pink Aesthetic**:
+   - Primary: `#EC4899` (Electric Pink), Rose: `#F43F5E`, Magenta: `#DB2777`.
+   - Interactive canvas background with Pink Waves, Delicate Grid, Constellation Mesh, and Minimal Aura.
+   - High-contrast typography and fluid dark/light themes.
 
 ## Running the Application
 
-### Option 1: Full-Stack Python Backend (Recommended)
-Run the root server from the project directory:
+### Option 1: Standalone Independent Backend (Port 8001)
+From the `jatin/` directory:
 ```bash
 python server.py
 ```
-Then visit:
-- **Jatin Spare Front End**: [http://localhost:8000/jatin/](http://localhost:8000/jatin/)
-- **Himanshu Main Front End**: [http://localhost:8000/himanshu/](http://localhost:8000/himanshu/)
-- **UX Case Study**: [http://localhost:8000/](http://localhost:8000/)
+Open: [http://localhost:8001/](http://localhost:8001/)
 
-### Option 2: Direct Browser Execution
-Open `jatin/index.html` directly in any modern web browser. The application will run seamlessly using persistent LocalStorage.
+### Option 2: Direct Browser Execution (Zero Server Required)
+Open `jatin/index.html` directly in any web browser (`file:///.../jatin/index.html`). The application operates 100% offline with persistent LocalStorage.
+
+### Option 3: Full Project Server (Port 8000)
+From the root repository directory:
+```bash
+python server.py
+```
+Visit: [http://localhost:8000/jatin/](http://localhost:8000/jatin/)

@@ -156,17 +156,19 @@ const DB = (function () {
         }
     }
 
+    let activePort = null;
+
     async function checkApiConnection() {
         const candidates = [];
-        if (window.location.protocol !== 'file:') {
-            candidates.push('');
+        if (window.location.protocol !== 'file:' && window.location.origin) {
+            candidates.push(window.location.origin);
         }
-        candidates.push('http://127.0.0.1:8000', 'http://localhost:8000');
+        candidates.push('http://127.0.0.1:8001', 'http://localhost:8001', 'http://127.0.0.1:8000', 'http://localhost:8000');
 
         for (const base of candidates) {
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 1000);
+                const timeoutId = setTimeout(() => controller.abort(), 900);
                 const res = await fetch(`${base}/api/health`, { signal: controller.signal });
                 clearTimeout(timeoutId);
                 if (res.ok) {
@@ -174,15 +176,17 @@ const DB = (function () {
                     if (data.status === 'ok') {
                         isApiConnected = true;
                         apiBaseUrl = base;
+                        activePort = data.port || (base.includes(':8001') ? 8001 : 8000);
                         return true;
                     }
                 }
             } catch (e) {
-                // Next candidate
+                // Try next candidate
             }
         }
         isApiConnected = false;
         apiBaseUrl = '';
+        activePort = null;
         return false;
     }
 
@@ -193,8 +197,13 @@ const DB = (function () {
             return {
                 mode: isApiConnected ? 'sqlite' : 'localstorage',
                 isApiConnected,
-                apiBaseUrl
+                apiBaseUrl,
+                activePort
             };
+        },
+
+        getActivePort() {
+            return activePort;
         },
 
         getMode() {
